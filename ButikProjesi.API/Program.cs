@@ -25,6 +25,13 @@ var sqliteConn = Environment.GetEnvironmentVariable("CONN")
                  ?? builder.Configuration.GetConnectionString("ButikDB")
                  ?? "Data Source=butik.db";
 
+// Railway/Cloud ortamında memory database kullan
+if (Environment.GetEnvironmentVariable("RAILWAY_ENVIRONMENT") != null || 
+    Environment.GetEnvironmentVariable("RENDER") != null)
+{
+    sqliteConn = "Data Source=:memory:";
+}
+
 builder.Services.AddDbContext<VeriTabaniContext>(options =>
     options.UseSqlite(sqliteConn));
 
@@ -77,6 +84,21 @@ app.UseCors("AllowBlazorClient");
 // Authentication ve Authorization middleware'lerini ekle
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Veritabanını oluştur ve migration'ları uygula
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<VeriTabaniContext>();
+    try
+    {
+        await context.Database.EnsureCreatedAsync();
+        Console.WriteLine("Veritabanı oluşturuldu/doğrulandı");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Veritabanı oluşturma hatası: {ex.Message}");
+    }
+}
 
 // Admin rolü ve kullanıcısını oluştur
 using (var scope = app.Services.CreateScope())
