@@ -91,12 +91,25 @@ using (var scope = app.Services.CreateScope())
     var context = scope.ServiceProvider.GetRequiredService<VeriTabaniContext>();
     try
     {
-        await context.Database.EnsureCreatedAsync();
-        Console.WriteLine("Veritabanı oluşturuldu/doğrulandı");
+        // Önce veritabanının var olup olmadığını kontrol et
+        var canConnect = await context.Database.CanConnectAsync();
+        Console.WriteLine($"Veritabanı bağlantısı: {canConnect}");
+        
+        if (!canConnect)
+        {
+            // Veritabanı yoksa oluştur
+            await context.Database.EnsureCreatedAsync();
+            Console.WriteLine("Veritabanı oluşturuldu");
+        }
+        
+        // Migration'ları uygula
+        await context.Database.MigrateAsync();
+        Console.WriteLine("Migration'lar uygulandı");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"Veritabanı oluşturma hatası: {ex.Message}");
+        Console.WriteLine($"Veritabanı kurulum hatası: {ex.Message}");
+        Console.WriteLine($"Hata detayı: {ex.InnerException?.Message}");
     }
 }
 

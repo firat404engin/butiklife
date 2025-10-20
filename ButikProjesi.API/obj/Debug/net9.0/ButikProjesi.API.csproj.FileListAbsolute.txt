@@ -162,3 +162,4 @@ C:\Users\Firat\Desktop\butiklife\ButikProjesi.API\obj\Debug\net9.0\refint\ButikP
 C:\Users\Firat\Desktop\butiklife\ButikProjesi.API\obj\Debug\net9.0\ButikProjesi.API.pdb
 C:\Users\Firat\Desktop\butiklife\ButikProjesi.API\obj\Debug\net9.0\ButikProjesi.API.genruntimeconfig.cache
 C:\Users\Firat\Desktop\butiklife\ButikProjesi.API\obj\Debug\net9.0\ref\ButikProjesi.API.dll
+C:\Users\Firat\Desktop\butiklife\ButikProjesi.API\obj\Debug\net9.0\ButikProjesi.API.sourcelink.json
