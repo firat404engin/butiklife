@@ -1,0 +1,135 @@
+@page "/admin/urunler/yeni"
+@page "/admin/urunler/duzenle/{UrunId:int}"
+@attribute [Authorize(Roles = "Admin")]
+@inject UrunServisi UrunServisi
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Ürün Düzenle - BUTIK Admin</PageTitle>
+
+<MudPaper Outlined="false" Elevation="0" Class="pa-4">
+    <MudText Typo="Typo.h5" Class="mb-4">@(_yeniMi ? "Yeni Ürün Ekle" : "Ürünü Düzenle")</MudText>
+    @if (_yukleniyor)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+        <MudText Class="mt-2">Yükleniyor...</MudText>
+    }
+    else if (!string.IsNullOrEmpty(_hataMesaji))
+    {
+        <MudAlert Severity="Severity.Error">@_hataMesaji</MudAlert>
+    }
+    else
+    {
+    <MudForm @ref="form">
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="model.Ad" Label="Ürün Adı" Variant="Variant.Outlined" Required="true" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudNumericField @bind-Value="model.Fiyat" Label="Güncel / İndirimli Fiyat" Variant="Variant.Outlined" Required="true" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudNumericField @bind-Value="model.EskiFiyat" Label="Eski Fiyat (İsteğe Bağlı)" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudTextField @bind-Value="model.Aciklama" Label="Açıklama" Variant="Variant.Outlined" Lines="4" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudNumericField @bind-Value="model.StokAdedi" Label="Stok Adedi" Variant="Variant.Outlined" Required="true" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="model.GorselUrl" Label="Görsel URL" Variant="Variant.Outlined" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudSelect T="int" @bind-Value="model.KategoriId" Label="Kategori" Variant="Variant.Outlined" Required="true" Disabled="@(kategoriler == null || kategoriler.Count == 0)">
+                    @if (kategoriler != null && kategoriler.Count > 0)
+                    {
+                        @foreach (var kat in kategoriler)
+                        {
+                            <MudSelectItem T="int" Value="@kat.Id">@kat.Ad</MudSelectItem>
+                        }
+                    }
+                </MudSelect>
+                @if (kategoriler != null && kategoriler.Count == 0)
+                {
+                    <MudText Typo="Typo.caption" Class="mt-1">Kategori bulunamadı. Lütfen önce <MudLink Href="/admin/kategoriler/yeni">kategori ekleyin</MudLink>.</MudText>
+                }
+            </MudItem>
+        </MudGrid>
+    </MudForm>
+
+    <MudStack Direction="Direction.Row" Spacing="2" Class="mt-4">
+        <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="Geri">İptal</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Kaydet">Kaydet</MudButton>
+    </MudStack>
+    }
+</MudPaper>
+
+@code {
+    [Parameter] public int? UrunId { get; set; }
+
+    private MudForm? form;
+    private Urun model = new();
+    private List<Kategori> kategoriler = new();
+    private bool _yukleniyor = true;
+    private string? _hataMesaji;
+    private bool _yeniMi => !UrunId.HasValue || UrunId.Value == 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            kategoriler = await UrunServisi.KategorileriGetirAsync();
+            if (!_yeniMi)
+            {
+                var urun = await UrunServisi.UrunGetirByIdAsync(UrunId!.Value);
+                if (urun != null)
+                {
+                    model = urun;
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _hataMesaji = $"Sayfa yüklenirken hata oluştu: {ex.Message}";
+        }
+        finally
+        {
+            _yukleniyor = false;
+        }
+    }
+
+    private void Geri() => Navigation.NavigateTo("/admin/urunler");
+
+    private async Task Kaydet()
+    {
+        if (form is null) return;
+        await form.Validate();
+        if (!form.IsValid) return;
+
+        if (_yeniMi)
+        {
+            var eklenen = await UrunServisi.UrunEkleAsync(model);
+            if (eklenen == null)
+            {
+                Snackbar.Add("Ürün eklenemedi", Severity.Error);
+                return;
+            }
+            Snackbar.Add("Ürün eklendi", Severity.Success);
+        }
+        else
+        {
+            var g = await UrunServisi.UrunGuncelleAsync(model);
+            if (g == null)
+            {
+                Snackbar.Add("Ürün güncellenemedi", Severity.Error);
+                return;
+            }
+            Snackbar.Add("Ürün güncellendi", Severity.Success);
+        }
+
+        Navigation.NavigateTo("/admin/urunler");
+    }
+}
+
+

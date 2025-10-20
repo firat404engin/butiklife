@@ -1,0 +1,281 @@
+@using Microsoft.AspNetCore.Components.WebAssembly.Services
+
+<div class="modern-loading-screen">
+    <!-- Modern Background with Fashion Elements -->
+    <div class="loading-background">
+        <div class="fashion-pattern"></div>
+        <div class="gradient-overlay"></div>
+    </div>
+    
+    <!-- Central Content -->
+    <div class="loading-content">
+        <!-- Fashion Icons Animation -->
+        <div class="fashion-icons">
+            <div class="fashion-icon icon-1">👗</div>
+            <div class="fashion-icon icon-2">👠</div>
+            <div class="fashion-icon icon-3">👜</div>
+            <div class="fashion-icon icon-4">💍</div>
+            <div class="fashion-icon icon-5">👒</div>
+        </div>
+        
+        <!-- Modern Text -->
+        <div class="loading-text">
+            <h1 class="loading-title">FG Collection</h1>
+            <p class="loading-subtitle">Stilinizi keşfedin, kaliteyi yaşayın</p>
+        </div>
+        
+        <!-- Modern Progress Indicator -->
+        <div class="modern-progress">
+            <div class="progress-dots">
+                <div class="dot active"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .modern-loading-screen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 9999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+
+    .loading-background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+    }
+
+    .fashion-pattern {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-image: 
+            radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+        animation: patternMove 20s ease-in-out infinite;
+    }
+
+    .gradient-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(45deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8));
+    }
+
+    .loading-content {
+        position: relative;
+        z-index: 2;
+        text-align: center;
+        color: white;
+    }
+
+    .fashion-icons {
+        position: relative;
+        width: 300px;
+        height: 300px;
+        margin: 0 auto 3rem;
+    }
+
+    .fashion-icon {
+        position: absolute;
+        font-size: 4rem;
+        animation: fashionFloat 4s ease-in-out infinite;
+        filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+    }
+
+    .fashion-icon.icon-1 {
+        animation-delay: 0s;
+        top: 10%;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .fashion-icon.icon-2 {
+        animation-delay: 0.8s;
+        top: 20%;
+        right: 10%;
+    }
+
+    .fashion-icon.icon-3 {
+        animation-delay: 1.6s;
+        bottom: 20%;
+        right: 10%;
+    }
+
+    .fashion-icon.icon-4 {
+        animation-delay: 2.4s;
+        bottom: 10%;
+        left: 50%;
+        transform: translateX(-50%);
+    }
+
+    .fashion-icon.icon-5 {
+        animation-delay: 3.2s;
+        top: 20%;
+        left: 10%;
+    }
+
+    @@keyframes fashionFloat {
+        0%, 100% {
+            opacity: 0.7;
+            transform: translateY(0px) scale(1);
+        }
+        25% {
+            opacity: 1;
+            transform: translateY(-10px) scale(1.1);
+        }
+        50% {
+            opacity: 0.8;
+            transform: translateY(-5px) scale(1.05);
+        }
+        75% {
+            opacity: 1;
+            transform: translateY(-15px) scale(1.15);
+        }
+    }
+
+    @@keyframes patternMove {
+        0%, 100% {
+            transform: translateX(0px) translateY(0px);
+        }
+        25% {
+            transform: translateX(10px) translateY(-10px);
+        }
+        50% {
+            transform: translateX(-5px) translateY(5px);
+        }
+        75% {
+            transform: translateX(5px) translateY(-5px);
+        }
+    }
+
+    .loading-text {
+        margin-bottom: 3rem;
+    }
+
+    .loading-title {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 3.5rem;
+        font-weight: 800;
+        margin: 0 0 1rem 0;
+        text-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        background: linear-gradient(45deg, #fff, #f0f0f0, #fff);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        animation: titleGlow 3s ease-in-out infinite;
+    }
+
+    .loading-subtitle {
+        font-family: 'Roboto', sans-serif;
+        font-size: 1.4rem;
+        font-weight: 300;
+        opacity: 0.9;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+    }
+
+    @@keyframes titleGlow {
+        0%, 100% {
+            filter: brightness(1);
+        }
+        50% {
+            filter: brightness(1.2);
+        }
+    }
+
+    .modern-progress {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .progress-dots {
+        display: flex;
+        gap: 12px;
+    }
+
+    .dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transition: all 0.3s ease;
+    }
+
+    .dot.active {
+        background: white;
+        transform: scale(1.2);
+        box-shadow: 0 0 20px rgba(255, 255, 255, 0.6);
+    }
+
+    .dot:nth-child(1) { animation: dotPulse 2s ease-in-out infinite 0s; }
+    .dot:nth-child(2) { animation: dotPulse 2s ease-in-out infinite 0.5s; }
+    .dot:nth-child(3) { animation: dotPulse 2s ease-in-out infinite 1s; }
+    .dot:nth-child(4) { animation: dotPulse 2s ease-in-out infinite 1.5s; }
+
+    @@keyframes dotPulse {
+        0%, 100% {
+            opacity: 0.3;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 1;
+            transform: scale(1.3);
+        }
+    }
+
+    @@media (max-width: 768px) {
+        .fashion-icons {
+            width: 200px;
+            height: 200px;
+            margin-bottom: 2rem;
+        }
+        
+        .fashion-icon {
+            font-size: 2.5rem;
+        }
+        
+        .loading-title {
+            font-size: 2.5rem;
+        }
+        
+        .loading-subtitle {
+            font-size: 1rem;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .fashion-icons {
+            width: 150px;
+            height: 150px;
+        }
+        
+        .fashion-icon {
+            font-size: 2rem;
+        }
+        
+        .loading-title {
+            font-size: 2rem;
+        }
+    }
+</style>

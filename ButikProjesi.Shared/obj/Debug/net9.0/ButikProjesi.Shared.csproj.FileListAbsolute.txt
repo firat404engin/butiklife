@@ -1,0 +1,11 @@
+C:\Users\Firat\Desktop\butiklife\ButikProjesi.Shared\bin\Debug\net9.0\ButikProjesi.Shared.deps.json
+C:\Users\Firat\Desktop\butiklife\ButikProjesi.Shared\bin\Debug\net9.0\ButikProjesi.Shared.dll
+C:\Users\Firat\Desktop\butiklife\ButikProjesi.Shared\bin\Debug\net9.0\ButikProjesi.Shared.pdb
+C:\Users\Firat\Desktop\butiklife\ButikProjesi.Shared\obj\Debug\net9.0\ButikProjesi.Shared.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\Firat\Desktop\butiklife\ButikProjesi.Shared\obj\Debug\net9.0\ButikProjesi.Shared.AssemblyInfoInputs.cache
+C:\Users\Firat\Desktop\butiklife\ButikProjesi.Shared\obj\Debug\net9.0\ButikProjesi.Shared.AssemblyInfo.cs
+C:\Users\Firat\Desktop\butiklife\ButikProjesi.Shared\obj\Debug\net9.0\ButikProjesi.Shared.csproj.CoreCompileInputs.cache
+C:\Users\Firat\Desktop\butiklife\ButikProjesi.Shared\obj\Debug\net9.0\ButikProjesi.Shared.dll
+C:\Users\Firat\Desktop\butiklife\ButikProjesi.Shared\obj\Debug\net9.0\refint\ButikProjesi.Shared.dll
+C:\Users\Firat\Desktop\butiklife\ButikProjesi.Shared\obj\Debug\net9.0\ButikProjesi.Shared.pdb
+C:\Users\Firat\Desktop\butiklife\ButikProjesi.Shared\obj\Debug\net9.0\ref\ButikProjesi.Shared.dll

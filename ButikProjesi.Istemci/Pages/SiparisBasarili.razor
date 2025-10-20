@@ -1,0 +1,168 @@
+@page "/siparis-basarili"
+@inject NavigationManager Navigation
+
+<PageTitle>Sipariş Başarılı - BUTIK</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Medium" Class="mt-8">
+    <MudPaper Elevation="0" Class="pa-8 text-center" Style="border: 1px solid #e0e0e0; border-radius: 16px; background: white; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);">
+        <!-- Başarı İkonu -->
+        <div class="mb-6 success-icon-container">
+            <MudIcon Icon="@Icons.Material.Filled.CheckCircle" 
+                    Color="Color.Success" 
+                    Style="font-size: 120px; animation: successPulse 2s ease-in-out infinite;" />
+        </div>
+        
+        <!-- Başarı Mesajı -->
+        <MudText Typo="Typo.h3" Class="mb-3" Style="font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: -0.01em; color: #000000;">
+            Siparişiniz Alındı!
+        </MudText>
+        
+        <MudText Typo="Typo.h6" Class="mb-6" Style="font-family: 'Roboto', sans-serif; color: #666666; font-weight: 400;">
+            Teşekkür ederiz, siparişiniz başarıyla oluşturuldu.
+        </MudText>
+        
+        <MudDivider Class="my-6" />
+        
+        <!-- Bilgilendirme Mesajları -->
+        <MudStack Spacing="3" Class="mb-6 text-left">
+            <MudAlert Severity="Severity.Info" 
+                     Variant="Variant.Outlined" 
+                     Icon="@Icons.Material.Outlined.Email"
+                     Style="border-radius: 8px; border-color: #e0e0e0; background: #f8f9fa;">
+                <MudText Typo="Typo.body1" Style="font-family: 'Roboto', sans-serif; color: #333333;">
+                    Sipariş onay e-postası adresinize gönderilecektir.
+                </MudText>
+            </MudAlert>
+            
+            <MudAlert Severity="Severity.Success" 
+                     Variant="Variant.Outlined" 
+                     Icon="@Icons.Material.Outlined.LocalShipping"
+                     Style="border-radius: 8px; border-color: #e0e0e0; background: #f8f9fa;">
+                <MudText Typo="Typo.body1" Style="font-family: 'Roboto', sans-serif; color: #333333;">
+                    Siparişiniz en kısa sürede kargoya teslim edilecektir.
+                </MudText>
+            </MudAlert>
+            
+            <MudAlert Severity="Severity.Normal" 
+                     Variant="Variant.Outlined" 
+                     Icon="@Icons.Material.Outlined.Inventory"
+                     Style="border-radius: 8px; border-color: #e0e0e0; background: #f8f9fa;">
+                <MudText Typo="Typo.body1" Style="font-family: 'Roboto', sans-serif; color: #333333;">
+                    Sipariş durumunuzu e-posta üzerinden takip edebilirsiniz.
+                </MudText>
+            </MudAlert>
+        </MudStack>
+        
+        <MudDivider Class="my-6" />
+        
+        <!-- Aksiyon Butonları -->
+        <MudStack Row Justify="Justify.Center" Spacing="3" Class="mt-6">
+            <MudButton Variant="Variant.Filled" 
+                      Color="Color.Primary" 
+                      Size="Size.Large"
+                      StartIcon="@Icons.Material.Outlined.Home"
+                      OnClick="@(() => Navigation.NavigateTo("/"))"
+                      Style="font-family: 'Roboto', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 32px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                Ana Sayfaya Dön
+            </MudButton>
+            
+            <MudButton Variant="Variant.Outlined" 
+                      Color="Color.Primary" 
+                      Size="Size.Large"
+                      StartIcon="@Icons.Material.Outlined.ShoppingBag"
+                      OnClick="@(() => Navigation.NavigateTo("/urunler"))"
+                      Style="font-family: 'Roboto', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 8px; border-color: #667eea; color: #667eea; padding: 12px 32px; transition: all 0.3s ease;">
+                Alışverişe Devam Et
+            </MudButton>
+        </MudStack>
+        
+        <!-- İletişim Bilgisi -->
+        <MudText Typo="Typo.body2" Class="mt-8" Style="font-family: 'Roboto', sans-serif; color: #999999;">
+            Sorularınız için: <MudLink Href="mailto:destek@butik.com" Underline="Underline.Always" Style="color: #000000;">destek@butik.com</MudLink>
+        </MudText>
+    </MudPaper>
+</MudContainer>
+
+
+@code {
+    protected override void OnInitialized()
+    {
+        Console.WriteLine("Sipariş başarılı sayfası yüklendi");
+    }
+}
+
+<style>
+    /* Modern Sipariş Başarılı Stilleri */
+    .success-icon-container {
+        position: relative;
+        display: inline-block;
+    }
+    
+    .success-icon-container::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 140px;
+        height: 140px;
+        background: linear-gradient(135deg, #4caf50, #8bc34a);
+        border-radius: 50%;
+        opacity: 0.1;
+        animation: successRipple 2s ease-in-out infinite;
+    }
+    
+    @@keyframes successPulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.05);
+        }
+    }
+    
+    @@keyframes successRipple {
+        0% {
+            transform: translate(-50%, -50%) scale(0.8);
+            opacity: 0.3;
+        }
+        50% {
+            transform: translate(-50%, -50%) scale(1.2);
+            opacity: 0.1;
+        }
+        100% {
+            transform: translate(-50%, -50%) scale(1.4);
+            opacity: 0;
+        }
+    }
+    
+    /* Modern Buton Hover Efektleri */
+    .mud-button-root:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
+    }
+    
+    /* Modern Alert Stilleri */
+    .mud-alert {
+        transition: all 0.3s ease;
+        border-radius: 8px !important;
+    }
+    
+    .mud-alert:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .success-icon-container .mud-icon {
+            font-size: 80px !important;
+        }
+        
+        .success-icon-container::before {
+            width: 100px;
+            height: 100px;
+        }
+    }
+</style>
+

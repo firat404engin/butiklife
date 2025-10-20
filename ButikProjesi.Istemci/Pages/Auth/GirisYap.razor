@@ -1,0 +1,151 @@
+@page "/giris-yap"
+@page "/giris"
+@using ButikProjesi.Istemci.Modeller
+@using ButikProjesi.Istemci.Servisler
+@inject AuthServisi AuthServisi
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Giriş Yap - BUTIK</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <MudPaper Elevation="0" Class="pa-8" Style="border: 1px solid #e0e0e0; border-radius: 0;">
+        <!-- Logo / Başlık -->
+        <div class="text-center mb-6">
+            <MudText Typo="Typo.h4" Style="font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: -0.01em; color: #000000;">
+                Giriş Yap
+            </MudText>
+            <MudText Typo="Typo.body2" Class="mt-2" Style="font-family: 'Roboto', sans-serif; color: #666666;">
+                Hesabınıza giriş yapın
+            </MudText>
+        </div>
+
+        <!-- Giriş Formu -->
+        <EditForm Model="@model" OnValidSubmit="@HandleGiris">
+            <DataAnnotationsValidator />
+
+            <MudStack Spacing="4">
+                <!-- E-posta -->
+                <MudTextField @bind-Value="model.Email"
+                             Label="E-posta"
+                             Variant="Variant.Outlined"
+                             InputType="InputType.Email"
+                             Required="true"
+                             Style="font-family: 'Roboto', sans-serif; border-radius: 0;" />
+                <ValidationMessage For="@(() => model.Email)" />
+
+                <!-- Şifre -->
+                <MudTextField @bind-Value="model.Sifre"
+                             Label="Şifre"
+                             Variant="Variant.Outlined"
+                             InputType="@(sifreGoster ? InputType.Text : InputType.Password)"
+                             Adornment="Adornment.End"
+                             AdornmentIcon="@(sifreGoster ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                             OnAdornmentClick="@(() => sifreGoster = !sifreGoster)"
+                             Required="true"
+                             Style="font-family: 'Roboto', sans-serif; border-radius: 0;" />
+                <ValidationMessage For="@(() => model.Sifre)" />
+
+                <!-- Beni Hatırla -->
+                <MudCheckBox @bind-Value="model.BeniHatirla" 
+                            Label="Beni Hatırla" 
+                            Color="Color.Primary"
+                            Style="font-family: 'Roboto', sans-serif;" />
+
+                <!-- Giriş Yap Butonu -->
+                <MudButton Variant="Variant.Filled"
+                          Color="Color.Primary"
+                          Size="Size.Large"
+                          FullWidth="true"
+                          ButtonType="ButtonType.Submit"
+                          Disabled="@yukleniyor"
+                          StartIcon="@Icons.Material.Outlined.Login"
+                          Style="font-family: 'Roboto', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 0; background: #000000; color: white; margin-top: 16px;">
+                    @if (yukleniyor)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                        <span>Giriş Yapılıyor...</span>
+                    }
+                    else
+                    {
+                        <span>Giriş Yap</span>
+                    }
+                </MudButton>
+            </MudStack>
+        </EditForm>
+
+        <!-- Kayıt Ol Linki -->
+        <MudDivider Class="my-6" />
+        <div class="text-center">
+            <MudText Typo="Typo.body2" Style="font-family: 'Roboto', sans-serif; color: #666666;">
+                Henüz hesabınız yok mu?
+                <MudLink Href="/kayit-ol" Underline="Underline.Always" Style="color: #000000; font-weight: 500;">
+                    Kayıt Olun
+                </MudLink>
+            </MudText>
+        </div>
+
+        <!-- Ana Sayfaya Dön -->
+        <div class="text-center mt-4">
+            <MudButton Variant="Variant.Text"
+                      Color="Color.Inherit"
+                      StartIcon="@Icons.Material.Outlined.ArrowBack"
+                      OnClick="@(() => Navigation.NavigateTo("/"))"
+                      Style="font-family: 'Roboto', sans-serif; color: #666666;">
+                Ana Sayfaya Dön
+            </MudButton>
+        </div>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private GirisDto model = new();
+    private bool yukleniyor = false;
+    private bool sifreGoster = false;
+
+    private async Task HandleGiris()
+    {
+        try
+        {
+            yukleniyor = true;
+            StateHasChanged();
+
+            Console.WriteLine($"Giriş formu gönderiliyor: {model.Email}");
+
+            var sonuc = await AuthServisi.GirisYapAsync(model);
+
+            if (sonuc != null && sonuc.Basarili)
+            {
+                Console.WriteLine($"Giriş başarılı! Email: {sonuc.Email}, ID: {sonuc.KullaniciId}");
+                
+                Snackbar.Add(sonuc.Mesaj, Severity.Success);
+                
+                // Kısa bir gecikme sonrası ana sayfaya yönlendir
+                // AuthServisi zaten NotifyUserAuthentication() çağırdı
+                await Task.Delay(500);
+                
+                Console.WriteLine("Ana sayfaya yönlendiriliyor...");
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                var hataMetni = sonuc?.Hatalar.Any() == true
+                    ? string.Join(", ", sonuc.Hatalar)
+                    : sonuc?.Mesaj ?? "Giriş işlemi başarısız oldu";
+
+                Snackbar.Add(hataMetni, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Giriş hatası: {ex.Message}");
+            Snackbar.Add("Giriş işlemi sırasında bir hata oluştu!", Severity.Error);
+        }
+        finally
+        {
+            yukleniyor = false;
+            StateHasChanged();
+        }
+    }
+}
+

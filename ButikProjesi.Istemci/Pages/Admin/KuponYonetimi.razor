@@ -1,0 +1,127 @@
+@page "/admin/kupon-yonetimi"
+@attribute [Authorize(Roles = "Admin")]
+@inject KuponServisi KuponServisi
+@inject ISnackbar Snackbar
+
+<MudPaper Outlined="true" Class="pa-4">
+    <MudToolBar Dense="true">
+        <MudText Typo="Typo.h6">Kupon Yönetimi</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Outlined" 
+                  Color="Color.Success" 
+                  StartIcon="@Icons.Material.Filled.Add" 
+                  Href="/admin/kuponlar/yeni"
+                  Class="mud-button-elevation-0">
+            Yeni Kupon Ekle
+        </MudButton>
+    </MudToolBar>
+
+    @if (_kuponlar == null) {
+        <div class="pa-4 d-flex justify-center"><MudProgressCircular Indeterminate="true" /></div>
+    } else {
+        <MudTable Items="@_kuponlar" Hover="true" Dense="true" Outlined="true" Class="mt-4">
+            <HeaderContent>
+                <MudTh>Kod</MudTh>
+                <MudTh>İndirim Tipi</MudTh>
+                <MudTh>Değer</MudTh>
+                <MudTh>Son Geçerlilik Tarihi</MudTh>
+                <MudTh>Aktif</MudTh>
+                <MudTh>Eylemler</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Kod">@context.Kod</MudTd>
+                <MudTd DataLabel="İndirim Tipi">@context.Tipi</MudTd>
+                <MudTd DataLabel="Değer">@context.Deger</MudTd>
+                <MudTd DataLabel="Son Geçerlilik Tarihi">
+                    @if (context.SonGecerlilikTarihi.HasValue)
+                    {
+                        @context.SonGecerlilikTarihi.Value.ToShortDateString()
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.caption">Süresiz</MudText>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Aktif">
+                    <MudSwitch T="bool" Checked="@context.AktifMi" Color="Color.Success" 
+                               OnCheckedChanged="@(async (bool isChecked) => await OnAktifDurumDegisti(context, isChecked))" />
+                </MudTd>
+                <MudTd DataLabel="Eylemler">
+                    <MudStack Direction="Direction.Row" Spacing="2" Justify="Justify.Center">
+                        <MudButton Variant="Variant.Outlined" 
+                                  Color="Color.Primary" 
+                                  Size="Size.Small"
+                                  StartIcon="@Icons.Material.Filled.Edit"
+                                  Href="@($"/admin/kuponlar/duzenle/{context.Id}")">
+                            Düzenle
+                        </MudButton>
+                        <MudButton Variant="Variant.Outlined" 
+                                  Color="Color.Secondary" 
+                                  Size="Size.Small"
+                                  StartIcon="@Icons.Material.Filled.Delete"
+                                  OnClick="@(() => KuponSil(context))">
+                            Sil
+                        </MudButton>
+                    </MudStack>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+    }
+</MudPaper>
+
+@code {
+    private List<Kupon>? _kuponlar;
+
+    protected override async Task OnInitializedAsync() 
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync() 
+    {
+        try
+        {
+            _kuponlar = await KuponServisi.TumKuponlariGetirAsync();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Kuponlar yüklenirken hata oluştu!", Severity.Error);
+            Console.WriteLine($"Kupon yükleme hatası: {ex.Message}");
+        }
+    }
+
+        private async Task OnAktifDurumDegisti(Kupon kupon, bool isChecked)
+        {
+            try
+            {
+                
+                await KuponServisi.ToggleAktifAsync(kupon.Id);
+                var durum = isChecked ? "aktif" : "pasif";
+                Snackbar.Add($"Kupon '{kupon.Kod}' {durum} yapıldı.", Severity.Info);
+                
+                // Arayüzü yenilemek için listeyi tekrar çekmek en garantili yöntemdir.
+                await LoadDataAsync(); 
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add("Kupon durumu güncellenirken hata oluştu!", Severity.Error);
+                Console.WriteLine($"Kupon durum güncelleme hatası: {ex.Message}");
+            }
+        }
+
+        private async Task KuponSil(Kupon kupon)
+        {
+            try
+            {
+                await KuponServisi.KuponSilAsync(kupon.Id);
+                Snackbar.Add($"Kupon '{kupon.Kod}' başarıyla silindi.", Severity.Success);
+                await LoadDataAsync();
+            }
+            catch (Exception ex)
+            {
+                Snackbar.Add("Kupon silinirken hata oluştu!", Severity.Error);
+                Console.WriteLine($"Kupon silme hatası: {ex.Message}");
+            }
+        }
+}

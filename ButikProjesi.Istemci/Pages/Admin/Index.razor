@@ -1,0 +1,345 @@
+@page "/admin"
+@attribute [Authorize(Roles = "Admin")]
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Dashboard - BUTIK Admin</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4 mb-6">
+    <!-- Modern Header -->
+    <MudPaper Elevation="0" Class="pa-6 mb-6" Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; color: white;">
+        <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+            <div>
+                <MudText Typo="Typo.h3" Style="font-family: 'Inter', sans-serif; font-weight: 700; margin-bottom: 8px;">
+                    Admin Dashboard
+                </MudText>
+                <MudText Typo="Typo.body1" Style="opacity: 0.9;">
+                    Mağaza yönetim paneline hoş geldiniz
+                </MudText>
+            </div>
+            <MudButton Variant="Variant.Outlined" 
+                      Color="Color.Inherit" 
+                      StartIcon="@Icons.Material.Filled.Home"
+                      Href="/"
+                      Style="border-color: rgba(255,255,255,0.3); color: white;">
+                Ana Site
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (istatistikler == null)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+        <MudText Class="mt-4">İstatistikler yükleniyor...</MudText>
+    }
+    else
+    {
+        <!-- Modern İstatistik Kartları -->
+        <MudGrid Spacing="4" Class="mb-8">
+            <!-- Toplam Ürün -->
+            <MudItem xs="12" sm="6" md="4" lg="2">
+                <MudPaper Elevation="0" Class="modern-stat-card" Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 16px; padding: 24px; height: 160px; position: relative; overflow: hidden;">
+                    <div class="d-flex align-center justify-space-between mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.Inventory2" Size="Size.Large" Style="opacity: 0.9;" />
+                        <MudChip T="string" Size="Size.Small" Style="background: rgba(255,255,255,0.2); color: white; font-weight: 600; border-radius: 20px;">
+                            Ürünler
+                        </MudChip>
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.h3" Style="font-family: 'Inter', sans-serif; font-weight: 700; margin-bottom: 4px;">
+                            @istatistikler.Value.GetProperty("toplamUrun").GetInt32()
+                        </MudText>
+                        <MudText Typo="Typo.body2" Style="opacity: 0.9; font-weight: 500;">
+                            Toplam Ürün
+                        </MudText>
+                    </div>
+                    <!-- Decorative Circle -->
+                    <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Toplam Sipariş -->
+            <MudItem xs="12" sm="6" md="4" lg="2">
+                <MudPaper Elevation="0" Class="modern-stat-card" Style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); color: white; border-radius: 16px; padding: 24px; height: 160px; position: relative; overflow: hidden;">
+                    <div class="d-flex align-center justify-space-between mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Size="Size.Large" Style="opacity: 0.9;" />
+                        <MudChip T="string" Size="Size.Small" Style="background: rgba(255,255,255,0.2); color: white; font-weight: 600; border-radius: 20px;">
+                            Siparişler
+                        </MudChip>
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.h3" Style="font-family: 'Inter', sans-serif; font-weight: 700; margin-bottom: 4px;">
+                            @istatistikler.Value.GetProperty("toplamSiparis").GetInt32()
+                        </MudText>
+                        <MudText Typo="Typo.body2" Style="opacity: 0.9; font-weight: 500;">
+                            Toplam Sipariş
+                        </MudText>
+                    </div>
+                    <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Toplam Kullanıcı -->
+            <MudItem xs="12" sm="6" md="4" lg="2">
+                <MudPaper Elevation="0" Class="modern-stat-card" Style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); color: white; border-radius: 16px; padding: 24px; height: 160px; position: relative; overflow: hidden;">
+                    <div class="d-flex align-center justify-space-between mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large" Style="opacity: 0.9;" />
+                        <MudChip T="string" Size="Size.Small" Style="background: rgba(255,255,255,0.2); color: white; font-weight: 600; border-radius: 20px;">
+                            Müşteriler
+                        </MudChip>
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.h3" Style="font-family: 'Inter', sans-serif; font-weight: 700; margin-bottom: 4px;">
+                            @istatistikler.Value.GetProperty("toplamKullanici").GetInt32()
+                        </MudText>
+                        <MudText Typo="Typo.body2" Style="opacity: 0.9; font-weight: 500;">
+                            Toplam Müşteri
+                        </MudText>
+                    </div>
+                    <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Toplam Gelir -->
+            <MudItem xs="12" sm="6" md="4" lg="2">
+                <MudPaper Elevation="0" Class="modern-stat-card" Style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); color: white; border-radius: 16px; padding: 24px; height: 160px; position: relative; overflow: hidden;">
+                    <div class="d-flex align-center justify-space-between mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.AttachMoney" Size="Size.Large" Style="opacity: 0.9;" />
+                        <MudChip T="string" Size="Size.Small" Style="background: rgba(255,255,255,0.2); color: white; font-weight: 600; border-radius: 20px;">
+                            Gelir
+                        </MudChip>
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.h3" Style="font-family: 'Inter', sans-serif; font-weight: 700; margin-bottom: 4px;">
+                            @istatistikler.Value.GetProperty("toplamGelir").GetDecimal().ToString("C0", new System.Globalization.CultureInfo("tr-TR"))
+                        </MudText>
+                        <MudText Typo="Typo.body2" Style="opacity: 0.9; font-weight: 500;">
+                            Toplam Gelir
+                        </MudText>
+                    </div>
+                    <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Bekleyen Sipariş -->
+            <MudItem xs="12" sm="6" md="4" lg="2">
+                <MudPaper Elevation="0" Class="modern-stat-card" Style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white; border-radius: 16px; padding: 24px; height: 160px; position: relative; overflow: hidden;">
+                    <div class="d-flex align-center justify-space-between mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.HourglassEmpty" Size="Size.Large" Style="opacity: 0.9;" />
+                        <MudChip T="string" Size="Size.Small" Style="background: rgba(255,255,255,0.2); color: white; font-weight: 600; border-radius: 20px;">
+                            Bekleyen
+                        </MudChip>
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.h3" Style="font-family: 'Inter', sans-serif; font-weight: 700; margin-bottom: 4px;">
+                            @istatistikler.Value.GetProperty("bekleyenSiparis").GetInt32()
+                        </MudText>
+                        <MudText Typo="Typo.body2" Style="opacity: 0.9; font-weight: 500;">
+                            Bekleyen Sipariş
+                        </MudText>
+                    </div>
+                    <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Düşük Stoklu Ürün -->
+            <MudItem xs="12" sm="6" md="4" lg="2">
+                <MudPaper Elevation="0" Class="modern-stat-card" Style="background: linear-gradient(135deg, #ff6a00 0%, #ee0979 100%); color: white; border-radius: 16px; padding: 24px; height: 160px; position: relative; overflow: hidden;">
+                    <div class="d-flex align-center justify-space-between mb-3">
+                        <MudIcon Icon="@Icons.Material.Filled.Warning" Size="Size.Large" Style="opacity: 0.9;" />
+                        <MudChip T="string" Size="Size.Small" Style="background: rgba(255,255,255,0.2); color: white; font-weight: 600; border-radius: 20px;">
+                            Uyarı
+                        </MudChip>
+                    </div>
+                    <div>
+                        <MudText Typo="Typo.h3" Style="font-family: 'Inter', sans-serif; font-weight: 700; margin-bottom: 4px;">
+                            @istatistikler.Value.GetProperty("dusukStokluUrun").GetInt32()
+                        </MudText>
+                        <MudText Typo="Typo.body2" Style="opacity: 0.9; font-weight: 500;">
+                            Düşük Stoklu Ürün
+                        </MudText>
+                    </div>
+                    <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 50%;"></div>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+
+        <!-- Modern Hızlı Erişim -->
+        <MudText Typo="Typo.h5" Class="mb-6 mt-8" Style="font-family: 'Inter', sans-serif; font-weight: 600; color: #2c3e50;">
+            Hızlı Erişim
+        </MudText>
+        <MudGrid Spacing="4">
+            <!-- Ürün Yönetimi -->
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <MudPaper Elevation="0" Class="modern-action-card" Style="border-radius: 16px; padding: 24px; height: 140px; border: 1px solid #e5e7eb; transition: all 0.3s ease; cursor: pointer;" @onclick="@(() => Navigation.NavigateTo("/admin/urunler"))">
+                    <MudStack Direction="Direction.Column" AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 100%;">
+                        <MudIcon Icon="@Icons.Material.Filled.Inventory" Size="Size.Large" Color="Color.Primary" Style="margin-bottom: 12px;" />
+                        <MudText Typo="Typo.h6" Style="font-family: 'Inter', sans-serif; font-weight: 600; color: #374151; text-align: center;">
+                            Ürün Yönetimi
+                        </MudText>
+                        <MudText Typo="Typo.body2" Style="color: #6b7280; text-align: center; margin-top: 4px;">
+                            Ürünleri düzenle
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Kupon Yönetimi -->
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <MudPaper Elevation="0" Class="modern-action-card" Style="border-radius: 16px; padding: 24px; height: 140px; border: 1px solid #e5e7eb; transition: all 0.3s ease; cursor: pointer;" @onclick="@(() => Navigation.NavigateTo("/admin/kupon-yonetimi"))">
+                    <MudStack Direction="Direction.Column" AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 100%;">
+                        <MudIcon Icon="@Icons.Material.Filled.LocalOffer" Size="Size.Large" Color="Color.Secondary" Style="margin-bottom: 12px;" />
+                        <MudText Typo="Typo.h6" Style="font-family: 'Inter', sans-serif; font-weight: 600; color: #374151; text-align: center;">
+                            Kupon Yönetimi
+                        </MudText>
+                        <MudText Typo="Typo.body2" Style="color: #6b7280; text-align: center; margin-top: 4px;">
+                            Kuponları yönet
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Siparişler -->
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <MudPaper Elevation="0" Class="modern-action-card" Style="border-radius: 16px; padding: 24px; height: 140px; border: 1px solid #e5e7eb; transition: all 0.3s ease; cursor: pointer;" @onclick="@(() => Navigation.NavigateTo("/admin/siparisler"))">
+                    <MudStack Direction="Direction.Column" AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 100%;">
+                        <MudIcon Icon="@Icons.Material.Filled.ShoppingBag" Size="Size.Large" Color="Color.Success" Style="margin-bottom: 12px;" />
+                        <MudText Typo="Typo.h6" Style="font-family: 'Inter', sans-serif; font-weight: 600; color: #374151; text-align: center;">
+                            Siparişler
+                        </MudText>
+                        <MudText Typo="Typo.body2" Style="color: #6b7280; text-align: center; margin-top: 4px;">
+                            Siparişleri görüntüle
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Müşteriler -->
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <MudPaper Elevation="0" Class="modern-action-card" Style="border-radius: 16px; padding: 24px; height: 140px; border: 1px solid #e5e7eb; transition: all 0.3s ease; cursor: pointer;" @onclick="@(() => Navigation.NavigateTo("/admin/musteriler"))">
+                    <MudStack Direction="Direction.Column" AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 100%;">
+                        <MudIcon Icon="@Icons.Material.Filled.People" Size="Size.Large" Color="Color.Info" Style="margin-bottom: 12px;" />
+                        <MudText Typo="Typo.h6" Style="font-family: 'Inter', sans-serif; font-weight: 600; color: #374151; text-align: center;">
+                            Müşteriler
+                        </MudText>
+                        <MudText Typo="Typo.body2" Style="color: #6b7280; text-align: center; margin-top: 4px;">
+                            Müşteri listesi
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Kategori Yönetimi -->
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <MudPaper Elevation="0" Class="modern-action-card" Style="border-radius: 16px; padding: 24px; height: 140px; border: 1px solid #e5e7eb; transition: all 0.3s ease; cursor: pointer;" @onclick="@(() => Navigation.NavigateTo("/admin/kategoriler"))">
+                    <MudStack Direction="Direction.Column" AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 100%;">
+                        <MudIcon Icon="@Icons.Material.Filled.Category" Size="Size.Large" Color="Color.Warning" Style="margin-bottom: 12px;" />
+                        <MudText Typo="Typo.h6" Style="font-family: 'Inter', sans-serif; font-weight: 600; color: #374151; text-align: center;">
+                            Kategoriler
+                        </MudText>
+                        <MudText Typo="Typo.body2" Style="color: #6b7280; text-align: center; margin-top: 4px;">
+                            Kategori yönetimi
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Yorumlar -->
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <MudPaper Elevation="0" Class="modern-action-card" Style="border-radius: 16px; padding: 24px; height: 140px; border: 1px solid #e5e7eb; transition: all 0.3s ease; cursor: pointer;" @onclick="@(() => Navigation.NavigateTo("/admin/yorumlar"))">
+                    <MudStack Direction="Direction.Column" AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 100%;">
+                        <MudIcon Icon="@Icons.Material.Filled.Comment" Size="Size.Large" Color="Color.Error" Style="margin-bottom: 12px;" />
+                        <MudText Typo="Typo.h6" Style="font-family: 'Inter', sans-serif; font-weight: 600; color: #374151; text-align: center;">
+                            Yorumlar
+                        </MudText>
+                        <MudText Typo="Typo.body2" Style="color: #6b7280; text-align: center; margin-top: 4px;">
+                            Yorum yönetimi
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Ana Site -->
+            <MudItem xs="12" sm="6" md="4" lg="3">
+                <MudPaper Elevation="0" Class="modern-action-card" Style="border-radius: 16px; padding: 24px; height: 140px; border: 1px solid #e5e7eb; transition: all 0.3s ease; cursor: pointer;" @onclick="@(() => Navigation.NavigateTo("/"))">
+                    <MudStack Direction="Direction.Column" AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 100%;">
+                        <MudIcon Icon="@Icons.Material.Filled.Home" Size="Size.Large" Color="Color.Default" Style="margin-bottom: 12px;" />
+                        <MudText Typo="Typo.h6" Style="font-family: 'Inter', sans-serif; font-weight: 600; color: #374151; text-align: center;">
+                            Ana Site
+                        </MudText>
+                        <MudText Typo="Typo.body2" Style="color: #6b7280; text-align: center; margin-top: 4px;">
+                            Mağazaya git
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    private System.Text.Json.JsonElement? istatistikler;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await IstatistikleriYukle();
+    }
+
+    private async Task IstatistikleriYukle()
+    {
+        try
+        {
+            Console.WriteLine("Dashboard istatistikleri yükleniyor...");
+            
+            var response = await HttpClient.GetAsync("api/dashboard/stats");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"İstatistikler alındı: {jsonContent}");
+                
+                istatistikler = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(jsonContent);
+                StateHasChanged();
+            }
+            else
+            {
+                Console.WriteLine($"İstatistikler alınamadı: {response.StatusCode}");
+                Snackbar.Add("İstatistikler yüklenirken bir hata oluştu!", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"İstatistikler yüklenirken hata: {ex.Message}");
+            Snackbar.Add("İstatistikler yüklenirken bir hata oluştu!", Severity.Error);
+        }
+    }
+}
+
+<style>
+    .modern-stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1) !important;
+    }
+    
+    .modern-action-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+        border-color: #d1d5db !important;
+    }
+    
+    .modern-action-card {
+        transition: all 0.3s ease;
+    }
+    
+    /* Responsive tasarım */
+    @@media (max-width: 768px) {
+        .modern-stat-card {
+            margin-bottom: 16px;
+        }
+        
+        .modern-action-card {
+            margin-bottom: 16px;
+        }
+    }
+</style>

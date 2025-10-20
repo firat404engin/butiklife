@@ -1,0 +1,269 @@
+@page "/admin/siparis-detay/{SiparisId:int}"
+@attribute [Authorize(Roles = "Admin")]
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Sipariş Detayı - BUTIK Admin</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4 mb-6">
+    <!-- Başlık -->
+    <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-6">
+        <MudText Typo="Typo.h4" Style="font-family: 'Inter', sans-serif; font-weight: 700; color: #2c3e50;">
+            Sipariş Detayı #@SiparisId
+        </MudText>
+        <MudButton Variant="Variant.Outlined" 
+                  Color="Color.Primary" 
+                  StartIcon="@Icons.Material.Filled.ArrowBack"
+                  OnClick="@(() => Navigation.NavigateTo("/admin/siparisler"))">
+            Geri Dön
+        </MudButton>
+    </MudStack>
+
+    @if (siparisDetay == null)
+    {
+        <MudStack AlignItems="AlignItems.Center" Class="mt-8">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            <MudText Class="mt-4">Sipariş detayları yükleniyor...</MudText>
+        </MudStack>
+    }
+    else
+    {
+        <MudGrid Spacing="4">
+            <!-- Sipariş Bilgileri -->
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="0" Class="pa-4" Style="border: 1px solid #e0e0e0; border-radius: 8px;">
+                    <MudText Typo="Typo.h6" Class="mb-4" Style="font-weight: 600; color: #374151;">
+                        Sipariş Bilgileri
+                    </MudText>
+                    
+                    <MudStack Spacing="2">
+                        <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween">
+                            <MudText Typo="Typo.body2" Style="color: #6b7280;">Sipariş ID:</MudText>
+                            <MudText Typo="Typo.body2" Style="font-weight: 600;">#@siparisDetay.id</MudText>
+                        </MudStack>
+                        
+                        <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween">
+                            <MudText Typo="Typo.body2" Style="color: #6b7280;">Müşteri:</MudText>
+                            <MudText Typo="Typo.body2" Style="font-weight: 600;">@siparisDetay.kullaniciEmail</MudText>
+                        </MudStack>
+                        
+                        <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween">
+                            <MudText Typo="Typo.body2" Style="color: #6b7280;">Ad Soyad:</MudText>
+                            <MudText Typo="Typo.body2" Style="font-weight: 600;">@siparisDetay.adSoyad</MudText>
+                        </MudStack>
+                        
+                        <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween">
+                            <MudText Typo="Typo.body2" Style="color: #6b7280;">Telefon:</MudText>
+                            <MudText Typo="Typo.body2" Style="font-weight: 600;">@siparisDetay.telefon</MudText>
+                        </MudStack>
+                        
+                        <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween">
+                            <MudText Typo="Typo.body2" Style="color: #6b7280;">Sipariş Tarihi:</MudText>
+                            <MudText Typo="Typo.body2" Style="font-weight: 600;">@siparisDetay.siparisTarihi.ToString("dd.MM.yyyy HH:mm")</MudText>
+                        </MudStack>
+                        
+                        <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween">
+                            <MudText Typo="Typo.body2" Style="color: #6b7280;">Durum:</MudText>
+                            <MudChip T="string" Color="@GetDurumRengi(siparisDetay.durum)" Size="Size.Small">
+                                @siparisDetay.durum
+                            </MudChip>
+                        </MudStack>
+                        
+                        @if (siparisDetay.teslimTarihi.HasValue)
+                        {
+                            <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween">
+                                <MudText Typo="Typo.body2" Style="color: #6b7280;">Teslim Tarihi:</MudText>
+                                <MudText Typo="Typo.body2" Style="font-weight: 600;">@siparisDetay.teslimTarihi.Value.ToString("dd.MM.yyyy HH:mm")</MudText>
+                            </MudStack>
+                        }
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Teslimat Bilgileri -->
+            <MudItem xs="12" md="6">
+                <MudPaper Elevation="0" Class="pa-4" Style="border: 1px solid #e0e0e0; border-radius: 8px;">
+                    <MudText Typo="Typo.h6" Class="mb-4" Style="font-weight: 600; color: #374151;">
+                        Teslimat Bilgileri
+                    </MudText>
+                    
+                    <MudStack Spacing="2">
+                        <MudText Typo="Typo.body2" Style="color: #6b7280;">Adres:</MudText>
+                        <MudText Typo="Typo.body2" Style="font-weight: 600; margin-bottom: 16px;">@siparisDetay.adres</MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Sipariş Kalemleri -->
+            <MudItem xs="12">
+                <MudPaper Elevation="0" Class="pa-4" Style="border: 1px solid #e0e0e0; border-radius: 8px;">
+                    <MudText Typo="Typo.h6" Class="mb-4" Style="font-weight: 600; color: #374151;">
+                        Sipariş Kalemleri
+                    </MudText>
+                    
+                    <MudTable Items="@siparisDetay.siparisKalemleri" Hover="true" Striped="true" Dense="true">
+                        <HeaderContent>
+                            <MudTh>Ürün</MudTh>
+                            <MudTh>Adet</MudTh>
+                            <MudTh>Birim Fiyat</MudTh>
+                            <MudTh>Toplam</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd DataLabel="Ürün">@context.urunAd</MudTd>
+                            <MudTd DataLabel="Adet">@context.adet</MudTd>
+                            <MudTd DataLabel="Birim Fiyat">@context.fiyat.ToString("C2", new System.Globalization.CultureInfo("tr-TR"))</MudTd>
+                            <MudTd DataLabel="Toplam">@((context.adet * context.fiyat).ToString("C2", new System.Globalization.CultureInfo("tr-TR")))</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                    
+                    <MudDivider Class="my-4" />
+                    
+                    <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                        <MudText Typo="Typo.h5" Style="font-weight: 700; color: #374151;">
+                            Toplam Tutar:
+                        </MudText>
+                        <MudText Typo="Typo.h4" Style="font-weight: 700; color: #059669;">
+                            @siparisDetay.toplamTutar.ToString("C2", new System.Globalization.CultureInfo("tr-TR"))
+                        </MudText>
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+
+            <!-- Durum Güncelleme -->
+            <MudItem xs="12">
+                <MudPaper Elevation="0" Class="pa-4" Style="border: 1px solid #e0e0e0; border-radius: 8px;">
+                    <MudText Typo="Typo.h6" Class="mb-4" Style="font-weight: 600; color: #374151;">
+                        Sipariş Durumu Güncelle
+                    </MudText>
+                    
+                    <MudStack Direction="Direction.Row" Spacing="2" Class="mb-4">
+                        @if (siparisDetay.durum != "Hazırlanıyor")
+                        {
+                            <MudButton Variant="Variant.Outlined" 
+                                      Color="Color.Warning" 
+                                      StartIcon="@Icons.Material.Filled.Build"
+                                      OnClick="@(() => DurumGuncelle("Hazırlanıyor"))">
+                                Hazırlanıyor
+                            </MudButton>
+                        }
+                        
+                        @if (siparisDetay.durum != "Tamamlandı")
+                        {
+                            <MudButton Variant="Variant.Outlined" 
+                                      Color="Color.Success" 
+                                      StartIcon="@Icons.Material.Filled.Check"
+                                      OnClick="@(() => DurumGuncelle("Tamamlandı"))">
+                                Tamamlandı
+                            </MudButton>
+                        }
+                        
+                        @if (siparisDetay.durum != "Teslim Edildi")
+                        {
+                            <MudButton Variant="Variant.Outlined" 
+                                      Color="Color.Info" 
+                                      StartIcon="@Icons.Material.Filled.LocalShipping"
+                                      OnClick="@(() => DurumGuncelle("Teslim Edildi"))">
+                                Teslim Edildi
+                            </MudButton>
+                        }
+                    </MudStack>
+                </MudPaper>
+            </MudItem>
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int SiparisId { get; set; }
+    
+    private SiparisDetayDto? siparisDetay;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SiparisDetayiniYukle();
+    }
+
+    private async Task SiparisDetayiniYukle()
+    {
+        try
+        {
+            var response = await HttpClient.GetAsync($"api/siparisler/{SiparisId}");
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonContent = await response.Content.ReadAsStringAsync();
+                siparisDetay = System.Text.Json.JsonSerializer.Deserialize<SiparisDetayDto>(jsonContent);
+                StateHasChanged();
+            }
+            else
+            {
+                Snackbar.Add("Sipariş detayları yüklenirken hata oluştu!", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Sipariş detayları yüklenirken hata oluştu!", Severity.Error);
+            Console.WriteLine($"Sipariş detay yükleme hatası: {ex.Message}");
+        }
+    }
+
+    private async Task DurumGuncelle(string yeniDurum)
+    {
+        try
+        {
+            var durumDto = new { YeniDurum = yeniDurum };
+            var json = System.Text.Json.JsonSerializer.Serialize(durumDto);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            
+            var response = await HttpClient.PutAsync($"api/siparisler/{SiparisId}/durum", content);
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Sipariş durumu güncellendi!", Severity.Success);
+                await SiparisDetayiniYukle();
+            }
+            else
+            {
+                Snackbar.Add("Sipariş durumu güncellenirken hata oluştu!", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Sipariş durumu güncellenirken hata oluştu!", Severity.Error);
+            Console.WriteLine($"Sipariş durum güncelleme hatası: {ex.Message}");
+        }
+    }
+
+    private Color GetDurumRengi(string durum)
+    {
+        return durum switch
+        {
+            "Hazırlanıyor" => Color.Warning,
+            "Tamamlandı" => Color.Success,
+            "Teslim Edildi" => Color.Info,
+            _ => Color.Default
+        };
+    }
+
+    public class SiparisDetayDto
+    {
+        public int id { get; set; }
+        public string kullaniciEmail { get; set; } = string.Empty;
+        public string adSoyad { get; set; } = string.Empty;
+        public string telefon { get; set; } = string.Empty;
+        public string adres { get; set; } = string.Empty;
+        public DateTime siparisTarihi { get; set; }
+        public decimal toplamTutar { get; set; }
+        public string durum { get; set; } = string.Empty;
+        public DateTime? teslimTarihi { get; set; }
+        public List<SiparisKalemiDetayDto> siparisKalemleri { get; set; } = new List<SiparisKalemiDetayDto>();
+    }
+
+    public class SiparisKalemiDetayDto
+    {
+        public int id { get; set; }
+        public int urunId { get; set; }
+        public string urunAd { get; set; } = string.Empty;
+        public int adet { get; set; }
+        public decimal fiyat { get; set; }
+    }
+}

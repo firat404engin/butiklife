@@ -1,0 +1,101 @@
+@page "/admin/kategoriler/yeni"
+@page "/admin/kategoriler/duzenle/{KategoriId:int}"
+@attribute [Authorize(Roles = "Admin")]
+@inject UrunServisi UrunServisi
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Kategori Düzenle - BUTIK Admin</PageTitle>
+
+<MudPaper Outlined="false" Elevation="0" Class="pa-4">
+    <MudText Typo="Typo.h5" Class="mb-4">@(_yeniMi ? "Yeni Kategori Ekle" : "Kategoriyi Düzenle")</MudText>
+    @if (_yukleniyor)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+        <MudText Class="mt-2">Yükleniyor...</MudText>
+    }
+    else if (!string.IsNullOrEmpty(_hataMesaji))
+    {
+        <MudAlert Severity="Severity.Error">@_hataMesaji</MudAlert>
+    }
+    else
+    {
+        <MudForm @ref="form">
+            <MudTextField @bind-Value="model.Ad" Label="Kategori Adı" Variant="Variant.Outlined" Required="true" Immediate="true" />
+            <MudTextField @bind-Value="model.GorselUrl" Label="Görsel URL" Variant="Variant.Outlined" Class="mt-4" />
+        </MudForm>
+
+        <MudStack Direction="Direction.Row" Spacing="2" Class="mt-4">
+            <MudButton Variant="Variant.Text" Color="Color.Default" OnClick="Geri">İptal</MudButton>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Kaydet">Kaydet</MudButton>
+        </MudStack>
+    }
+</MudPaper>
+
+@code {
+    [Parameter] public int? KategoriId { get; set; }
+
+    private MudForm? form;
+    private Kategori model = new();
+    private bool _yeniMi => !KategoriId.HasValue || KategoriId.Value == 0;
+    private bool _yukleniyor = true;
+    private string? _hataMesaji;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            if (!_yeniMi)
+            {
+                var list = await UrunServisi.KategorileriGetirAsync();
+                var kat = list.FirstOrDefault(k => k.Id == KategoriId);
+                if (kat != null) model = kat;
+            }
+        }
+        catch (Exception ex)
+        {
+            _hataMesaji = $"Sayfa yüklenirken hata oluştu: {ex.Message}";
+        }
+        finally
+        {
+            _yukleniyor = false;
+        }
+    }
+
+    private void Geri() => Navigation.NavigateTo("/admin/kategoriler");
+
+    private async Task Kaydet()
+    {
+        if (form is null) return;
+        await form.Validate();
+        if (!form.IsValid) return;
+
+        if (_yeniMi)
+        {
+            var yeni = await UrunServisi.KategoriEkleAsync(new Kategori { 
+                Ad = model.Ad.Trim(),
+                GorselUrl = model.GorselUrl?.Trim() ?? string.Empty
+            });
+            if (yeni == null)
+            {
+                Snackbar.Add("Kategori eklenemedi", Severity.Error);
+                return;
+            }
+            Snackbar.Add("Kategori eklendi", Severity.Success);
+        }
+        else
+        {
+            var g = await UrunServisi.KategoriGuncelleAsync(model);
+            if (g == null)
+            {
+                Snackbar.Add("Kategori güncellenemedi", Severity.Error);
+                return;
+            }
+            Snackbar.Add("Kategori güncellendi", Severity.Success);
+        }
+
+        Navigation.NavigateTo("/admin/kategoriler");
+    }
+}
+
+

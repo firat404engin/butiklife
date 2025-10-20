@@ -1,0 +1,421 @@
+﻿@layout RootLayout
+@inherits LayoutComponentBase
+@using ButikProjesi.Istemci.Servisler
+@using Microsoft.AspNetCore.Components.Authorization
+@using ButikProjesi.Istemci.Shared
+@using System.Text.Json
+@inject SepetServisi SepetServisi
+@inject AuthServisi AuthServisi
+@inject CustomAuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+@inject HttpClient Http
+@inject IDialogService DialogService
+@using Microsoft.JSInterop
+@implements IDisposable
+
+<div class="site-header">
+    @* Kayan Yazı Şeridi - Sayfanın normal bir parçası *@
+    <div class="marquee-banner" style="background-color: #000000 !important; color: #ffffff !important; padding: 15px 0; line-height: 1.2; font-size: 16px; font-weight: 500;">
+        <div class="marquee-content" style="color: #ffffff !important;">
+            <span class="font-weight-bold mx-4" style="color: #ffffff !important;">Tüm ürünlerde 200 TL indirim kodu: FG200</span>
+            <span class="mx-4" style="color: #ffffff !important;">|</span>
+            <span class="mx-4" style="color: #ffffff !important;">Yeni Sezon Ürünlerini Keşfet</span>
+            <span class="mx-4" style="color: #ffffff !important;">|</span>
+            <span class="font-weight-bold mx-4" style="color: #ffffff !important;">Tüm ürünlerde 200 TL indirim kodu: FG200</span>
+            <span class="mx-4" style="color: #ffffff !important;">|</span>
+            <span class="mx-4" style="color: #ffffff !important;">Hızlı ve Güvenli Kargo</span>
+        </div>
+    </div>
+
+    @* Ana Navigasyon Barı *@
+    <MudAppBar Elevation="0" Class="border-bottom" Fixed="false" Sticky="false">
+        <MudToolBar Style="width: 100%; padding: 0 24px; align-items: center;">
+            <!-- Sol: Logo/Marka -->
+            <MudLink Href="/" Style="display: flex; align-items: center;">
+                <img src="https://resmim.net/cdn/2025/10/17/j73TJH.png" height="55" alt="Butik Logosu" style="cursor: pointer;" />
+            </MudLink>
+            
+            <MudSpacer />
+            
+            <!-- Desktop Navigasyon Menüsü -->
+            <MudHidden Breakpoint="Breakpoint.SmAndDown">
+                <NavMenu />
+            </MudHidden>
+            
+            <!-- Mobile Hamburger Menü -->
+            <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                <MudIconButton Icon="@Icons.Material.Filled.Menu" 
+                              Color="Color.Inherit" 
+                              Edge="Edge.End"
+                              OnClick="@(() => _mobileDrawerOpen = !_mobileDrawerOpen)" />
+            </MudHidden>
+            
+            <MudSpacer />
+            
+            @* Sağdaki İkon Grubu *@
+            <div class="header-icon-group">
+                <!-- Bildirimler -->
+                <MudMenu Class="notification-menu" AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight" Elevation="8" Dense="true" OffsetY="true" CloseOnClick="true">
+                    <ActivatorContent>
+                        <MudBadge Content="@_okunmamisSayisi"
+                                 Visible="@(_okunmamisSayisi > 0)"
+                                 Color="Color.Error"
+                                 Overlap="true">
+                            <MudTooltip Text="Bildirimler">
+                                <MudIconButton Icon="@Icons.Material.Filled.Notifications" 
+                                              Color="Color.Inherit" 
+                                              Edge="Edge.End"
+                                              Size="Size.Medium" />
+                            </MudTooltip>
+                        </MudBadge>
+                    </ActivatorContent>
+                    <ChildContent>
+                        <div class="notification-header">
+                            <MudText Typo="Typo.h6" Class="notification-header-title">Bildirimler</MudText>
+                            @if (_bildirimler != null && _bildirimler.Any())
+                            {
+                                <MudButton Size="Size.Small" 
+                                          Variant="Variant.Text" 
+                                          OnClick="@HepsiniOkunduIsaretle"
+                                          Class="notification-clear-all-btn">
+                                    Tümünü Okundu İşaretle
+                                </MudButton>
+                            }
+                        </div>
+                        @if (_bildirimler != null && _bildirimler.Any())
+                        {
+                            @foreach (var bildirim in _bildirimler)
+                            {
+                                <MudMenuItem Href="@($"/urun/{bildirim.UrunId}")">
+                                    <div class="notification-item @(bildirim.OkunduMu ? string.Empty : "notification-item--unread")">
+                                        <img src="@bildirim.Urun?.GorselUrl" 
+                                             class="notification-item-img" 
+                                             alt="@bildirim.Urun?.Ad" 
+                                             onerror="this.src='https://via.placeholder.com/60x60?text=Ürün'" />
+                                        <div class="notification-item-content">
+                                            <MudText Typo="Typo.body2" Class="notification-item-title">@bildirim.Mesaj</MudText>
+                                            <MudText Typo="Typo.caption" Class="notification-item-time">@bildirim.OlusturmaTarihi.ToString("dd.MM.yyyy HH:mm")</MudText>
+                                        </div>
+                                    </div>
+                                </MudMenuItem>
+                            }
+                        }
+                        else
+                        {
+                            <div class="notification-empty-state">
+                                <MudText Typo="Typo.body2">Yeni bildiriminiz yok.</MudText>
+                            </div>
+                        }
+                    </ChildContent>
+                </MudMenu>
+                
+                <!-- Profil / Giriş -->
+                <AuthorizeView>
+                    <Authorized>
+                        @{
+                            Console.WriteLine("=== AuthorizeView: AUTHORIZED - Menü gösteriliyor ===");
+                            Console.WriteLine($"=== Kullanıcı: {context.User.Identity?.Name} ===");
+                            Console.WriteLine($"=== IsAuthenticated: {context.User.Identity?.IsAuthenticated} ===");
+                        }
+                        <MudMenu AnchorOrigin="Origin.BottomRight" TransformOrigin="Origin.TopRight">
+                            <ActivatorContent>
+                                <MudIconButton Icon="@Icons.Material.Outlined.Person" 
+                                              Color="Color.Inherit" 
+                                              Edge="Edge.End"
+                                              Size="Size.Medium" />
+                            </ActivatorContent>
+                            <ChildContent>
+                                <MudText Typo="Typo.body2" Class="px-4 py-2" Style="font-family: 'Roboto', sans-serif; color: #666666; min-width: 200px;">
+                                    @context.User.Identity?.Name
+                                </MudText>
+                                <MudDivider />
+                                <MudMenuItem Icon="@Icons.Material.Outlined.Person" 
+                                            OnClick="@(() => Navigation.NavigateTo("/profil"))"
+                                            Style="font-family: 'Roboto', sans-serif;">
+                                    Profilim
+                                </MudMenuItem>
+                                <MudMenuItem Icon="@Icons.Material.Outlined.Favorite" 
+                                            OnClick="@(() => Navigation.NavigateTo("/favorilerim"))"
+                                            Style="font-family: 'Roboto', sans-serif;">
+                                    Favorilerim
+                                </MudMenuItem>
+                                <MudDivider />
+                                <MudMenuItem Icon="@Icons.Material.Outlined.Logout" 
+                                            OnClick="@CikisYap"
+                                            Style="font-family: 'Roboto', sans-serif; color: #d32f2f;">
+                                    Çıkış Yap
+                                </MudMenuItem>
+                            </ChildContent>
+                        </MudMenu>
+                    </Authorized>
+                    <NotAuthorized>
+                        @{
+                            Console.WriteLine("=== AuthorizeView: NOT AUTHORIZED - Giriş ikonu gösteriliyor ===");
+                        }
+                        <MudTooltip Text="Giriş Yap">
+                            <MudIconButton Icon="@Icons.Material.Outlined.Person" 
+                                          Color="Color.Inherit" 
+                                          Edge="Edge.End"
+                                          Size="Size.Medium"
+                                          OnClick="@(() => Navigation.NavigateTo("/giris"))" />
+                        </MudTooltip>
+                    </NotAuthorized>
+                    <Authorizing>
+                        @{
+                            Console.WriteLine("=== AuthorizeView: AUTHORIZING - Yükleniyor... ===");
+                        }
+                        <MudIconButton Icon="@Icons.Material.Outlined.Person" 
+                                      Color="Color.Inherit" 
+                                      Edge="Edge.End"
+                                      Size="Size.Medium"
+                                      Disabled="true" />
+                    </Authorizing>
+                </AuthorizeView>
+                
+                <!-- Sepet Badge ile -->
+                <MudBadge Content="@sepetAdedi" 
+                         Color="Color.Error" 
+                         Overlap="true" 
+                         Visible="@(sepetAdedi > 0)"
+                         Style="cursor: pointer;">
+                    <MudIconButton Icon="@Icons.Material.Outlined.ShoppingBag" 
+                                  Color="Color.Inherit" 
+                                  Edge="Edge.End"
+                                  Size="Size.Medium"
+                                  OnClick="@(() => Navigation.NavigateTo("/sepet"))" />
+                </MudBadge>
+            </div>
+            
+            <!-- Mobil Menü Butonu -->
+            <MudHidden Breakpoint="Breakpoint.MdAndUp">
+                <MudIconButton Icon="@Icons.Material.Outlined.Menu" 
+                              Color="Color.Inherit" 
+                              Edge="Edge.End"
+                              OnClick="@(() => _mobileMenuOpen = !_mobileMenuOpen)" />
+            </MudHidden>
+        </MudToolBar>
+    </MudAppBar>
+</div>
+
+@* Ana Sayfa İçeriği - Sabit başlıktan aşağı itildi *@
+<div class="main-content-pushed-down">
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+</div>
+
+@* Mobile Drawer - Sağdan açılan hamburger menü *@
+    <MudDrawer @bind-Open="_mobileDrawerOpen" 
+               ClipMode="DrawerClipMode.Always" 
+               Variant="DrawerVariant.Temporary"
+               Anchor="Anchor.Right"
+               Elevation="2">
+        <div class="pa-4">
+            <MudText Typo="Typo.h6" Class="mb-4">Menü</MudText>
+            <NavMenu />
+        </div>
+    </MudDrawer>
+
+
+@code {
+    [Inject] IJSRuntime JS { get; set; } = default!;
+
+    private int sepetAdedi = 0;
+    private bool _mobileMenuOpen = false;
+    private bool _mobileDrawerOpen = false;
+    private int _okunmamisSayisi = 0;
+    private List<BildirimModel>? _bildirimler;
+    private string _appBarClass = "appbar-transparent";
+
+    protected override async Task OnInitializedAsync()
+    {
+        Console.WriteLine("=== MainLayout OnInitializedAsync başladı ===");
+        
+        await SepetAdediniGuncelle();
+        
+        // Sepet değişikliklerini dinle
+        SepetServisi.OnChange += SepetDegisti;
+        
+        // Authentication durumunu kontrol et
+        Console.WriteLine("=== Authentication state kontrol ediliyor ===");
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var kullanici = authState.User;
+        Console.WriteLine($"=== MainLayout - Kullanıcı authenticated: {kullanici.Identity?.IsAuthenticated} ===");
+        Console.WriteLine($"=== MainLayout - Kullanıcı adı: {kullanici.Identity?.Name} ===");
+        Console.WriteLine($"=== MainLayout - Identity type: {kullanici.Identity?.AuthenticationType} ===");
+        
+        // Scroll dinleyici kaydet (JS tarafı)
+        try
+        {
+            await JS.InvokeVoidAsync("butik_registerScrollHandler");
+        }
+        catch { }
+
+        // Eğer kullanıcı giriş yapmışsa, otomatik bildirim kontrolü yap
+        if (kullanici.Identity?.IsAuthenticated == true)
+        {
+            Console.WriteLine("=== Otomatik bildirim kontrolü başlatılıyor ===");
+            await OtomatikBildirimKontrolu();
+            await BildirimleriYukle();
+        }
+    }
+
+    private void SepetDegisti()
+    {
+        _ = SepetAdediniGuncelle();
+    }
+
+    private async Task SepetAdediniGuncelle()
+    {
+        try
+        {
+            sepetAdedi = await SepetServisi.ToplamAdet();
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Sepet adedi güncellenirken hata: {ex.Message}");
+        }
+    }
+
+    private async Task CikisYap()
+    {
+        try
+        {
+            await AuthServisi.CikisYapAsync();
+            Snackbar.Add("Başarıyla çıkış yapıldı!", Severity.Info);
+            Navigation.NavigateTo("/", forceLoad: true);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Çıkış hatası: {ex.Message}");
+            Snackbar.Add("Çıkış işlemi sırasında bir hata oluştu!", Severity.Error);
+        }
+    }
+
+    /// <summary>
+    /// Otomatik bildirim kontrolü - kullanıcı giriş yaptığında çalışır
+    /// </summary>
+    private async Task OtomatikBildirimKontrolu()
+    {
+        try
+        {
+            Console.WriteLine("=== Otomatik bildirim kontrolü başladı ===");
+            
+            // Akıllı fiyat kontrolü yap
+            var response = await Http.PostAsync("/api/bildirimler/kontrol-et", null);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonContent = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<Dictionary<string, object>>(jsonContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+                
+                var bildirimSayisi = result?.GetValueOrDefault("bildirimSayisi", 0);
+                if (bildirimSayisi != null && Convert.ToInt32(bildirimSayisi) > 0)
+                {
+                    Console.WriteLine($"=== {bildirimSayisi} yeni bildirim oluşturuldu ===");
+                    Snackbar.Add($"🎉 {bildirimSayisi} yeni indirim bildirimi!", Severity.Success);
+                }
+                
+                // Bildirimleri yeniden yükle
+                await BildirimleriYukle();
+            }
+            else
+            {
+                Console.WriteLine("=== Bildirim kontrolü başarısız ===");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"=== Bildirim kontrolü hatası: {ex.Message} ===");
+        }
+    }
+
+    /// <summary>
+    /// Bildirim modeli
+    /// </summary>
+    public class BildirimModel
+    {
+        public int Id { get; set; }
+        public string KullaniciId { get; set; } = string.Empty;
+        public int UrunId { get; set; }
+        public string Mesaj { get; set; } = string.Empty;
+        public bool OkunduMu { get; set; }
+        public DateTime OlusturmaTarihi { get; set; }
+        public UrunModel? Urun { get; set; }
+    }
+
+    /// <summary>
+    /// Ürün modeli
+    /// </summary>
+    public class UrunModel
+    {
+        public int Id { get; set; }
+        public string Ad { get; set; } = string.Empty;
+        public string GorselUrl { get; set; } = string.Empty;
+    }
+
+    /// <summary>
+    /// Bildirimleri yükle
+    /// </summary>
+    private async Task BildirimleriYukle()
+    {
+        try
+        {
+            var response = await Http.GetAsync("/api/bildirimler");
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonContent = await response.Content.ReadAsStringAsync();
+                _bildirimler = JsonSerializer.Deserialize<List<BildirimModel>>(jsonContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+                _okunmamisSayisi = _bildirimler?.Count(b => !b.OkunduMu) ?? 0;
+            }
+            else
+            {
+                _bildirimler = new List<BildirimModel>();
+                _okunmamisSayisi = 0;
+            }
+        }
+        catch
+        {
+            _bildirimler = new List<BildirimModel>();
+            _okunmamisSayisi = 0;
+        }
+        StateHasChanged();
+    }
+
+    /// <summary>
+    /// Tüm bildirimleri okundu olarak işaretle
+    /// </summary>
+    private async Task HepsiniOkunduIsaretle()
+    {
+        try
+        {
+            var response = await Http.PutAsync("/api/bildirimler/hepsini-okundu-isaretle", null);
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Tüm bildirimler okundu olarak işaretlendi!", Severity.Success);
+                await BildirimleriYukle();
+            }
+            else
+            {
+                Snackbar.Add("Bildirimler güncellenirken hata oluştu!", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Hata: {ex.Message}", Severity.Error);
+        }
+    }
+
+    public void Dispose()
+    {
+        SepetServisi.OnChange -= SepetDegisti;
+    }
+}

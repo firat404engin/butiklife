@@ -1,0 +1,638 @@
+@page "/sepet"
+@using ButikProjesi.Istemci.Modeller
+@using ButikProjesi.Istemci.Servisler
+@inject SepetServisi SepetServisi
+@inject KuponServisi KuponServisi
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<PageTitle>Sepetim - BUTIK</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6 mb-8">
+    <!-- Breadcrumb Navigasyon -->
+    <MudBreadcrumbs Items="@breadcrumbItems" Separator="/" Class="mb-6" Style="font-family: 'Roboto', sans-serif;">
+        <ItemTemplate Context="item">
+            @if (item.Disabled)
+            {
+                <MudText Typo="Typo.body1" Style="color: #000000; font-weight: 500;">@item.Text</MudText>
+            }
+            else
+            {
+                <MudLink Href="@item.Href" Underline="Underline.Hover" Style="color: #666666;">@item.Text</MudLink>
+            }
+        </ItemTemplate>
+    </MudBreadcrumbs>
+
+    @if (sepetUrunleri == null)
+    {
+        <!-- Yükleniyor -->
+        <MudStack AlignItems="AlignItems.Center" Class="mt-8">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+            <MudText Typo="Typo.h6" Class="mt-4" Style="font-family: 'Roboto', sans-serif;">Sepet yükleniyor...</MudText>
+        </MudStack>
+    }
+    else if (!sepetUrunleri.Any())
+    {
+        <!-- Boş Sepet -->
+        <MudPaper Elevation="0" Class="pa-8 text-center" Style="border: 1px solid #e0e0e0; border-radius: 0;">
+            <MudIcon Icon="@Icons.Material.Outlined.ShoppingBag" Size="Size.Large" Style="font-size: 80px; color: #cccccc;" Class="mb-4" />
+            <MudText Typo="Typo.h5" Class="mb-2" Style="font-family: 'Inter', sans-serif; font-weight: 600; color: #000000;">
+                Sepetiniz Boş
+            </MudText>
+            <MudText Typo="Typo.body1" Class="mb-4" Style="font-family: 'Roboto', sans-serif; color: #666666;">
+                Sepetinizde henüz ürün bulunmamaktadır.
+            </MudText>
+            <MudButton Variant="Variant.Filled" 
+                      Color="Color.Primary" 
+                      Size="Size.Large"
+                      OnClick="@(() => Navigation.NavigateTo("/urunler"))"
+                      Style="font-family: 'Roboto', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 0; background: #000000; color: white;">
+                Alışverişe Başla
+            </MudButton>
+        </MudPaper>
+    }
+    else
+    {
+        <!-- İki Sütunlu Düzen -->
+        <MudGrid>
+            <!-- Sol Sütun - Sepet Ürünleri -->
+            <MudItem xs="12" md="8">
+                <!-- Başlık -->
+                <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Class="mb-6">
+                    <MudText Typo="Typo.h4" Style="font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: -0.01em; color: #000000; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                        Sepetim (@sepetUrunleri.Count ürün)
+                    </MudText>
+                    <MudButton Variant="Variant.Outlined" 
+                              Color="Color.Error" 
+                              Size="Size.Small"
+                              StartIcon="@Icons.Material.Outlined.DeleteSweep"
+                              OnClick="@SepetiTemizle"
+                              Style="font-family: 'Roboto', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 6px; border-color: #f44336; color: #f44336; padding: 8px 16px;">
+                        Sepeti Temizle
+                    </MudButton>
+                </MudStack>
+                
+                <!-- Ürün Listesi -->
+                <MudStack Spacing="3">
+                    @foreach (var sepetUrunu in sepetUrunleri)
+                    {
+                        <MudPaper Elevation="0" Class="pa-4 modern-cart-item" Style="border: 1px solid #e0e0e0; border-radius: 12px; background: white; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06); position: relative; overflow: hidden;">
+                            <MudGrid>
+                                <!-- Ürün Görseli -->
+                                <MudItem xs="2" sm="1">
+                                    <MudLink Href="@($"/urun/{sepetUrunu.UrunId}")" Style="text-decoration: none; display: block;">
+                                        @if (!string.IsNullOrEmpty(sepetUrunu.GorselUrl))
+                                        {
+                                            <div class="product-image-container">
+                                                <img src="@sepetUrunu.GorselUrl" 
+                                                     alt="@sepetUrunu.Ad" 
+                                                     style="width: 100%; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid #e0e0e0; cursor: pointer; transition: all 0.3s ease;"
+                                                     class="product-image-hover" />
+                                                <div class="product-image-overlay">
+                                                    <MudIcon Icon="@Icons.Material.Outlined.Visibility" Size="Size.Small" Style="color: white;" />
+                                                </div>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="product-image-container">
+                                                <div style="width: 100%; height: 80px; background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%); display: flex; align-items: center; justify-content: center; border: 1px solid #e0e0e0; border-radius: 8px; cursor: pointer; transition: all 0.3s ease;"
+                                                     class="product-image-hover">
+                                                    <MudIcon Icon="@Icons.Material.Outlined.Image" Size="Size.Small" Style="color: #cccccc;" />
+                                                </div>
+                                                <div class="product-image-overlay">
+                                                    <MudIcon Icon="@Icons.Material.Outlined.Visibility" Size="Size.Small" Style="color: white;" />
+                                                </div>
+                                            </div>
+                                        }
+                                    </MudLink>
+                                </MudItem>
+                                
+                                <!-- Ürün Bilgileri -->
+                                <MudItem xs="10" sm="11">
+                                    <MudStack Spacing="1">
+                                        <!-- Ürün Adı ve Fiyat -->
+                                        <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start">
+                                            <MudText Typo="Typo.body1" Style="font-family: 'Inter', sans-serif; font-weight: 600; color: #000000; font-size: 16px; line-height: 1.4;">
+                                                @sepetUrunu.Ad
+                                            </MudText>
+                                            <MudIconButton Icon="@Icons.Material.Outlined.Close" 
+                                                          Size="Size.Small" 
+                                                          OnClick="@(() => SepettenCikar(sepetUrunu.UrunId))"
+                                                          Style="color: #f44336; padding: 4px; border-radius: 4px; transition: all 0.3s ease;"
+                                                          Class="remove-button" />
+                                        </MudStack>
+                                        
+                                        <!-- Adet ve Toplam Fiyat -->
+                                        <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+                                            <!-- Adet Seçici -->
+                                            <MudStack Direction="Direction.Row" AlignItems="AlignItems.Center" Spacing="2">
+                                                <MudText Typo="Typo.caption" Style="font-family: 'Roboto', sans-serif; color: #666666; min-width: 50px; font-size: 13px; font-weight: 500;">
+                                                    Adet:
+                                                </MudText>
+                                                <div class="quantity-selector">
+                                                    <MudIconButton Icon="@Icons.Material.Outlined.Remove" 
+                                                                  Size="Size.Small" 
+                                                                  Variant="Variant.Outlined"
+                                                                  OnClick="@(() => AdetAzalt(sepetUrunu.UrunId))"
+                                                                  Style="border: 1px solid #e0e0e0; border-radius: 6px; width: 32px; height: 32px; min-width: 32px; background: #f8f9fa; color: #666;" />
+                                                    
+                                                    <MudText Typo="Typo.body2" Style="font-family: 'Roboto', sans-serif; font-weight: 600; min-width: 30px; text-align: center; font-size: 14px; color: #000; background: #f8f9fa; padding: 6px 12px; border-radius: 6px; border: 1px solid #e0e0e0;">
+                                                        @sepetUrunu.Adet
+                                                    </MudText>
+                                                    
+                                                    <MudIconButton Icon="@Icons.Material.Outlined.Add" 
+                                                                  Size="Size.Small" 
+                                                                  Variant="Variant.Outlined"
+                                                                  OnClick="@(() => AdetArtir(sepetUrunu.UrunId))"
+                                                                  Style="border: 1px solid #e0e0e0; border-radius: 6px; width: 32px; height: 32px; min-width: 32px; background: #f8f9fa; color: #666;" />
+                                                </div>
+                                            </MudStack>
+                                            
+                                            <!-- Toplam Fiyat -->
+                                            <div class="price-container">
+                                                <MudText Typo="Typo.h6" Style="font-family: 'Inter', sans-serif; font-weight: 700; color: #000000; font-size: 16px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                                                    @sepetUrunu.ToplamFiyat.ToString("C", new System.Globalization.CultureInfo("tr-TR"))
+                                                </MudText>
+                                            </div>
+                                        </MudStack>
+                                        
+                                        <!-- Birim Fiyat -->
+                                        <MudText Typo="Typo.caption" Style="font-family: 'Roboto', sans-serif; color: #999999; font-size: 11px;">
+                                            Birim: @sepetUrunu.Fiyat.ToString("C", new System.Globalization.CultureInfo("tr-TR"))
+                                        </MudText>
+                                    </MudStack>
+                                </MudItem>
+                            </MudGrid>
+                        </MudPaper>
+                    }
+                </MudStack>
+                
+                <!-- Sepeti Temizle -->
+                <MudButton Variant="Variant.Outlined" 
+                          Color="Color.Error" 
+                          StartIcon="@Icons.Material.Outlined.DeleteOutline"
+                          Class="mt-4"
+                          OnClick="@SepetiTemizle"
+                          Style="font-family: 'Roboto', sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 0;">
+                    Sepeti Temizle
+                </MudButton>
+            </MudItem>
+            
+            <!-- Sağ Sütun - Sipariş Özeti -->
+            <MudItem xs="12" md="4">
+                <MudCard Elevation="0" Style="border: 1px solid #e0e0e0; border-radius: 0; position: sticky; top: 80px;">
+                    <MudCardContent Class="pa-6">
+                        <!-- Başlık -->
+                        <MudText Typo="Typo.h5" Class="mb-4" Style="font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: -0.01em; color: #000000;">
+                            Sipariş Özeti
+                        </MudText>
+                        
+                        <MudDivider Class="mb-4" />
+                        
+                        <!-- Kupon Kodu -->
+                        <MudStack Spacing="2" Class="mb-4">
+                            <MudText Typo="Typo.body1" Style="font-family: 'Roboto', sans-serif; font-weight: 500; color: #000000;">
+                                Kupon Kodu
+                            </MudText>
+                            <MudStack Direction="Direction.Row" Spacing="2">
+                                <MudTextField @bind-Value="kuponKodu" 
+                                            Placeholder="Kupon kodunuzu girin" 
+                                            Variant="Variant.Outlined" 
+                                            Size="Size.Small"
+                                            Style="flex: 1;"
+                                            OnKeyDown="@HandleKuponKeyDown" />
+                                <MudButton Variant="Variant.Outlined" 
+                                          Color="Color.Primary" 
+                                          Size="Size.Small"
+                                          OnClick="@KuponDogrula"
+                                          Loading="@kuponDogrulanıyor"
+                                          Style="border-radius: 0; min-width: 80px;">
+                                    Uygula
+                                </MudButton>
+                            </MudStack>
+                            @if (!string.IsNullOrEmpty(kuponMesaj))
+                            {
+                                <MudAlert Severity="@(kuponGecerli ? Severity.Success : Severity.Warning)" 
+                                         Variant="Variant.Outlined" 
+                                         Class="mt-2" 
+                                         Style="border-radius: 0;">
+                                    <MudText Typo="Typo.body2">@kuponMesaj</MudText>
+                                </MudAlert>
+                            }
+                        </MudStack>
+
+                        <!-- Ara Toplam -->
+                        <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween" Class="mb-3">
+                            <MudText Typo="Typo.body1" Style="font-family: 'Roboto', sans-serif; color: #666666;">
+                                Ara Toplam:
+                            </MudText>
+                            <MudText Typo="Typo.body1" Style="font-family: 'Roboto', sans-serif; font-weight: 500; color: #000000;">
+                                @toplamTutar.ToString("C", new System.Globalization.CultureInfo("tr-TR"))
+                            </MudText>
+                        </MudStack>
+
+                        @if (kuponGecerli && indirimTutari > 0)
+                        {
+                            <!-- İndirim -->
+                            <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween" Class="mb-3">
+                                <MudText Typo="Typo.body1" Style="font-family: 'Roboto', sans-serif; color: #00c853;">
+                                    İndirim (%@indirimOrani):
+                                </MudText>
+                                <MudText Typo="Typo.body1" Style="font-family: 'Roboto', sans-serif; font-weight: 500; color: #00c853;">
+                                    -@indirimTutari.ToString("C", new System.Globalization.CultureInfo("tr-TR"))
+                                </MudText>
+                            </MudStack>
+                        }
+                        
+                        <!-- Kargo -->
+                        <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween" Class="mb-3">
+                            <MudText Typo="Typo.body1" Style="font-family: 'Roboto', sans-serif; color: #666666;">
+                                Kargo:
+                            </MudText>
+                            <MudText Typo="Typo.body1" Style="font-family: 'Roboto', sans-serif; font-weight: 500; color: #00c853;">
+                                Ücretsiz
+                            </MudText>
+                        </MudStack>
+                        
+                        <MudDivider Class="my-4" />
+                        
+                        <!-- Toplam Tutar -->
+                        <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween" Class="mb-4">
+                            <MudText Typo="Typo.h6" Style="font-family: 'Inter', sans-serif; font-weight: 600; color: #000000;">
+                                Toplam:
+                            </MudText>
+                            <MudText Typo="Typo.h6" Style="font-family: 'Inter', sans-serif; font-weight: 600; color: #000000;">
+                                @sonToplamTutar.ToString("C", new System.Globalization.CultureInfo("tr-TR"))
+                            </MudText>
+                        </MudStack>
+                        
+                        <!-- Sipariş Tamamla Butonu -->
+                        <MudButton Variant="Variant.Filled" 
+                                  Color="Color.Primary" 
+                                  Size="Size.Large" 
+                                  FullWidth="true"
+                                  Href="/siparis-tamamla"
+                                  StartIcon="@Icons.Material.Outlined.ShoppingCartCheckout"
+                                  Style="font-family: 'Roboto', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                            Siparişi Tamamla
+                        </MudButton>
+                        
+                        <!-- Alışverişe Devam Et -->
+                        <MudButton Variant="Variant.Text" 
+                                  Color="Color.Inherit" 
+                                  FullWidth="true"
+                                  OnClick="@(() => Navigation.NavigateTo("/urunler"))"
+                                  Style="font-family: 'Roboto', sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: 0.05em; color: #666666;">
+                            Alışverişe Devam Et
+                        </MudButton>
+                        
+                        <!-- Güvenli Ödeme Bildirimi -->
+                        <MudAlert Severity="Severity.Info" 
+                                 Variant="Variant.Outlined" 
+                                 Icon="@Icons.Material.Outlined.Lock" 
+                                 Class="mt-4" 
+                                 Style="border-radius: 0; border-color: #e0e0e0;">
+                            <MudText Typo="Typo.body2" Style="font-family: 'Roboto', sans-serif; color: #666666;">
+                                Güvenli ödeme sistemi ile alışverişinizi tamamlayabilirsiniz.
+                            </MudText>
+                        </MudAlert>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    private List<SepetUrunu>? sepetUrunleri;
+    private List<BreadcrumbItem> breadcrumbItems = new();
+    private int toplamAdet = 0;
+    private decimal toplamTutar = 0;
+    
+    // Kupon değişkenleri
+    private string kuponKodu = string.Empty;
+    private bool kuponGecerli = false;
+    private decimal indirimOrani = 0;
+    private decimal indirimTutari = 0;
+    private decimal sonToplamTutar = 0;
+    private string kuponMesaj = string.Empty;
+    private bool kuponDogrulanıyor = false;
+    private IndirimTipi kuponTipi = IndirimTipi.Yuzde;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Breadcrumb'ları ayarla
+            breadcrumbItems = new List<BreadcrumbItem>
+            {
+                new BreadcrumbItem("Ana Sayfa", "/", disabled: false),
+                new BreadcrumbItem("Sepetim", null, disabled: true)
+            };
+            
+            await SepetiYukle();
+            
+            // Sepet değişikliklerini dinle
+            SepetServisi.OnChange += SepetDegisti;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Sepet yüklenirken hata oluştu: {ex.Message}");
+        }
+    }
+
+    private void SepetDegisti()
+    {
+        _ = SepetiYukle();
+    }
+
+    private async Task SepetiYukle()
+    {
+        try
+        {
+            sepetUrunleri = await SepetServisi.SepetiGetir();
+            toplamAdet = await SepetServisi.ToplamAdet();
+            toplamTutar = await SepetServisi.ToplamTutar();
+            
+            // Kupon hesaplamalarını güncelle
+            HesaplaToplamTutar();
+            
+            await InvokeAsync(StateHasChanged);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Sepet yükleme hatası: {ex.Message}");
+        }
+    }
+
+    private void HesaplaToplamTutar()
+    {
+        if (kuponGecerli && indirimOrani > 0)
+        {
+            if (kuponTipi == IndirimTipi.Yuzde)
+            {
+                // Yüzdelik indirim
+                indirimTutari = KuponServisi.IndirimTutariHesapla(toplamTutar, indirimOrani);
+                sonToplamTutar = KuponServisi.IndirimliTutarHesapla(toplamTutar, indirimTutari);
+            }
+            else if (kuponTipi == IndirimTipi.SabitTutar)
+            {
+                // Sabit tutar indirimi
+                indirimTutari = Math.Min(indirimOrani, toplamTutar); // Toplam tutardan fazla indirim yapılamaz
+                sonToplamTutar = Math.Max(0, toplamTutar - indirimTutari);
+            }
+        }
+        else
+        {
+            indirimTutari = 0;
+            sonToplamTutar = toplamTutar;
+        }
+    }
+
+    private async Task KuponDogrula()
+    {
+        if (string.IsNullOrWhiteSpace(kuponKodu))
+        {
+            kuponMesaj = "Lütfen kupon kodunu girin";
+            return;
+        }
+
+        try
+        {
+            kuponDogrulanıyor = true;
+            StateHasChanged();
+
+            var (basarili, deger, mesaj, tipi) = await KuponServisi.KuponDogrulaAsync(kuponKodu);
+            
+            kuponGecerli = basarili;
+            indirimOrani = deger;
+            kuponMesaj = mesaj;
+            kuponTipi = tipi;
+
+            if (basarili)
+            {
+                HesaplaToplamTutar();
+                
+                string indirimBilgisi = kuponTipi == IndirimTipi.Yuzde 
+                    ? $"%{deger} indirim" 
+                    : $"{deger}₺ indirim";
+                    
+                Snackbar.Add($"Kupon uygulandı! {indirimBilgisi} kazandınız", Severity.Success);
+            }
+            else
+            {
+                indirimTutari = 0;
+                sonToplamTutar = toplamTutar;
+                Snackbar.Add(mesaj, Severity.Warning);
+            }
+        }
+        catch (Exception ex)
+        {
+            kuponMesaj = "Kupon doğrulanırken hata oluştu";
+            kuponGecerli = false;
+            indirimOrani = 0;
+            indirimTutari = 0;
+            sonToplamTutar = toplamTutar;
+            Snackbar.Add("Kupon doğrulanırken hata oluştu!", Severity.Error);
+            Console.WriteLine($"Kupon doğrulama hatası: {ex.Message}");
+        }
+        finally
+        {
+            kuponDogrulanıyor = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task HandleKuponKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter")
+        {
+            await KuponDogrula();
+        }
+    }
+
+    private async Task AdetArtir(int urunId)
+    {
+        try
+        {
+            var urun = sepetUrunleri?.FirstOrDefault(u => u.UrunId == urunId);
+            if (urun != null)
+            {
+                await SepetServisi.AdetGuncelle(urunId, urun.Adet + 1);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Adet artırılırken hata oluştu!", Severity.Error);
+            Console.WriteLine($"Adet artırma hatası: {ex.Message}");
+        }
+    }
+
+    private async Task AdetAzalt(int urunId)
+    {
+        try
+        {
+            var urun = sepetUrunleri?.FirstOrDefault(u => u.UrunId == urunId);
+            if (urun != null)
+            {
+                if (urun.Adet > 1)
+                {
+                    await SepetServisi.AdetGuncelle(urunId, urun.Adet - 1);
+                }
+                else
+                {
+                    await SepetServisi.SepettenCikar(urunId);
+                    Snackbar.Add($"{urun.Ad} sepetten çıkarıldı!", Severity.Info);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Adet azaltılırken hata oluştu!", Severity.Error);
+            Console.WriteLine($"Adet azaltma hatası: {ex.Message}");
+        }
+    }
+
+    private async Task SepettenCikar(int urunId)
+    {
+        try
+        {
+            var urun = sepetUrunleri?.FirstOrDefault(u => u.UrunId == urunId);
+            await SepetServisi.SepettenCikar(urunId);
+            
+            if (urun != null)
+            {
+                Snackbar.Add($"{urun.Ad} sepetten çıkarıldı!", Severity.Info);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Ürün çıkarılırken hata oluştu!", Severity.Error);
+            Console.WriteLine($"Sepetten çıkarma hatası: {ex.Message}");
+        }
+    }
+
+    private async Task SepetiTemizle()
+    {
+        try
+        {
+            await SepetServisi.SepetiTemizle();
+            Snackbar.Add("Sepet temizlendi!", Severity.Info);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Sepet temizlenirken hata oluştu!", Severity.Error);
+            Console.WriteLine($"Sepet temizleme hatası: {ex.Message}");
+        }
+    }
+
+    public void Dispose()
+    {
+        SepetServisi.OnChange -= SepetDegisti;
+    }
+}
+
+<style>
+    /* Modern Sepet Stilleri */
+    .modern-cart-item:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15) !important;
+        border-color: #667eea !important;
+    }
+
+    .modern-cart-item::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+
+    .modern-cart-item:hover::before {
+        opacity: 1;
+    }
+
+    /* Ürün Görsel Container */
+    .product-image-container {
+        position: relative;
+        overflow: hidden;
+        border-radius: 8px;
+    }
+
+    .product-image-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        border-radius: 8px;
+    }
+
+    .product-image-container:hover .product-image-overlay {
+        opacity: 1;
+    }
+
+    .product-image-hover:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Adet Seçici */
+    .quantity-selector {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 4px;
+        border: 1px solid #e0e0e0;
+    }
+
+    .quantity-selector .mud-icon-button:hover {
+        background: #667eea !important;
+        color: white !important;
+        transform: scale(1.1);
+    }
+
+    /* Fiyat Container */
+    .price-container {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        padding: 8px 12px;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+    }
+
+    /* Kaldır Butonu */
+    .remove-button:hover {
+        background: #f44336 !important;
+        color: white !important;
+        transform: scale(1.1);
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .modern-cart-item {
+            padding: 16px !important;
+        }
+        
+        .product-image-hover {
+            height: 60px !important;
+        }
+        
+        .quantity-selector {
+            gap: 2px;
+        }
+    }
+</style>

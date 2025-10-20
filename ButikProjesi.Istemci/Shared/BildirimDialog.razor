@@ -1,0 +1,258 @@
+@using System.Text.Json
+@using MudBlazor
+@using MudBlazor.Services
+@inject HttpClient Http
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <TitleContent>
+        <MudStack Direction="Direction.Row" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.Notifications" Color="Color.Primary" />
+            <MudText Typo="Typo.h6" Style="font-weight: 600;">Bildirimlerim</MudText>
+            @if (_bildirimler != null && _bildirimler.Any())
+            {
+                <MudChip T="string" Color="Color.Primary" Size="Size.Small" Style="margin-left: 8px;">
+                    @_bildirimler.Count bildirim
+                </MudChip>
+            }
+        </MudStack>
+    </TitleContent>
+    <DialogContent>
+        @if (_bildirimYukleniyor)
+        {
+            <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 200px;">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                <MudText Typo="Typo.body2" Color="Color.Secondary" Class="mt-2">Bildirimler yükleniyor...</MudText>
+            </MudStack>
+        }
+        else if (_bildirimler == null || !_bildirimler.Any())
+        {
+            <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Style="height: 200px;">
+                <MudIcon Icon="@Icons.Material.Filled.NotificationsNone" Size="Size.Large" Color="Color.Secondary" />
+                <MudText Typo="Typo.h6" Color="Color.Secondary" Class="mt-2">Henüz bildiriminiz bulunmuyor</MudText>
+                <MudText Typo="Typo.body2" Color="Color.Secondary">Favoriye eklediğiniz ürünlerde indirim olduğunda burada görünecek</MudText>
+            </MudStack>
+        }
+        else
+        {
+            <MudList T="BildirimModel" Style="max-height: 500px; overflow-y: auto; padding: 8px;">
+                @foreach (var bildirim in _bildirimler)
+                {
+                    <MudListItem T="BildirimModel" Style="padding: 8px;">
+                        <MudCard Class="mb-3" Style="@(bildirim.OkunduMu ? "opacity: 0.7; background: #f8f9fa;" : "background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;")" Elevation="2">
+                            <MudCardContent Style="padding: 16px;">
+                                <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Start">
+                                    <MudStack Style="flex: 1;">
+                                        <MudStack Direction="Direction.Row" AlignItems="AlignItems.Center" Spacing="1" Class="mb-2">
+                                            @if (!bildirim.OkunduMu)
+                                            {
+                                                <MudChip T="string" Color="Color.Error" Size="Size.Small" Style="font-weight: 600;">
+                                                    YENİ
+                                                </MudChip>
+                                            }
+                                            <MudIcon Icon="@Icons.Material.Filled.LocalOffer" Size="Size.Small" 
+                                                     Style="@(bildirim.OkunduMu ? "color: #6c757d;" : "color: #ffd700;")" />
+                                        </MudStack>
+                                        <MudText Typo="Typo.body1" Style="font-weight: 500; line-height: 1.4;">
+                                            @bildirim.Mesaj
+                                        </MudText>
+                                        <MudText Typo="Typo.caption" Style="@(bildirim.OkunduMu ? "color: #6c757d;" : "color: rgba(255,255,255,0.8);")" Class="mt-1">
+                                            @bildirim.OlusturmaTarihi.ToString("dd MMMM yyyy, HH:mm")
+                                        </MudText>
+                                    </MudStack>
+                                    <MudStack Direction="Direction.Row" Spacing="1">
+                                        @if (!bildirim.OkunduMu)
+                                        {
+                                            <MudTooltip Text="Okundu olarak işaretle">
+                                                <MudIconButton Icon="@Icons.Material.Filled.CheckCircle" 
+                                                              Color="Color.Success" 
+                                                              Size="Size.Small"
+                                                              OnClick="@(() => OkunduIsaretle(bildirim.Id))"
+                                                              Style="background: rgba(76, 175, 80, 0.1);" />
+                                            </MudTooltip>
+                                        }
+                                        <MudTooltip Text="Bildirimi sil">
+                                            <MudIconButton Icon="@Icons.Material.Filled.Delete" 
+                                                          Color="Color.Error" 
+                                                          Size="Size.Small"
+                                                          OnClick="@(() => BildirimiSil(bildirim.Id))"
+                                                          Style="background: rgba(244, 67, 54, 0.1);" />
+                                        </MudTooltip>
+                                    </MudStack>
+                                </MudStack>
+                            </MudCardContent>
+                        </MudCard>
+                    </MudListItem>
+                }
+            </MudList>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center" Style="width: 100%;">
+            <MudStack Direction="Direction.Row" Spacing="2">
+                <MudButton OnClick="@TestBildirimOlustur" 
+                           Color="Color.Info" 
+                           StartIcon="@Icons.Material.Filled.Add"
+                           Disabled="@_bildirimYukleniyor"
+                           Variant="Variant.Outlined"
+                           Size="Size.Small">
+                    Test Bildirimi
+                </MudButton>
+                @if (_bildirimler != null && _bildirimler.Any(b => !b.OkunduMu))
+                {
+                    <MudButton OnClick="@HepsiniOkunduIsaretle" 
+                               Color="Color.Success" 
+                               StartIcon="@Icons.Material.Filled.CheckCircle"
+                               Disabled="@_bildirimYukleniyor"
+                               Variant="Variant.Outlined"
+                               Size="Size.Small">
+                        Hepsini Okundu İşaretle
+                    </MudButton>
+                }
+            </MudStack>
+            <MudButton OnClick="@(() => MudDialog.Close())" 
+                       Color="Color.Secondary" 
+                       Variant="Variant.Text"
+                       Size="Size.Small">
+                Kapat
+            </MudButton>
+        </MudStack>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] 
+    IDialogReference MudDialog { get; set; } = null!;
+
+    private List<BildirimModel>? _bildirimler;
+    private bool _bildirimYukleniyor = false;
+
+    public class BildirimModel
+    {
+        public int Id { get; set; }
+        public string KullaniciId { get; set; } = string.Empty;
+        public int UrunId { get; set; }
+        public string Mesaj { get; set; } = string.Empty;
+        public bool OkunduMu { get; set; }
+        public DateTime OlusturmaTarihi { get; set; }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await BildirimleriYukle();
+    }
+
+    private async Task BildirimleriYukle()
+    {
+        try
+        {
+            Console.WriteLine("=== BildirimleriYukle başladı ===");
+            _bildirimYukleniyor = true;
+            StateHasChanged();
+            
+            var response = await Http.GetAsync("/api/bildirimler");
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonContent = await response.Content.ReadAsStringAsync();
+                _bildirimler = JsonSerializer.Deserialize<List<BildirimModel>>(jsonContent, new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+            }
+            else
+            {
+                Snackbar.Add("Bildirimler yüklenirken hata oluştu!", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Hata: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            _bildirimYukleniyor = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task TestBildirimOlustur()
+    {
+        try
+        {
+            Console.WriteLine("=== TestBildirimOlustur çağrıldı ===");
+            var response = await Http.PostAsync("/api/bildirimler/test-bildirim", null);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Test bildirimi oluşturuldu!", Severity.Success);
+                await BildirimleriYukle();
+            }
+            else
+            {
+                Snackbar.Add("Test bildirimi oluşturulamadı!", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Test bildirim hatası: {ex.Message}");
+            Snackbar.Add($"Hata: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task OkunduIsaretle(int bildirimId)
+    {
+        try
+        {
+            var response = await Http.PutAsync($"/api/bildirimler/{bildirimId}/okundu-isaretle", null);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Bildirim okundu olarak işaretlendi!", Severity.Success);
+                await BildirimleriYukle();
+            }
+            else
+            {
+                Snackbar.Add("Bildirim güncellenirken hata oluştu!", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Hata: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private async Task HepsiniOkunduIsaretle()
+    {
+        try
+        {
+            var response = await Http.PutAsync("/api/bildirimler/hepsini-okundu-isaretle", null);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Tüm bildirimler okundu olarak işaretlendi!", Severity.Success);
+                await BildirimleriYukle();
+            }
+            else
+            {
+                Snackbar.Add("Bildirimler güncellenirken hata oluştu!", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add($"Hata: {ex.Message}", Severity.Error);
+        }
+    }
+
+    private void BildirimiSil(int bildirimId)
+    {
+        var bildirim = _bildirimler?.FirstOrDefault(b => b.Id == bildirimId);
+        if (bildirim != null)
+        {
+            _bildirimler?.Remove(bildirim);
+            StateHasChanged();
+            Snackbar.Add("Bildirim kaldırıldı!", Severity.Success);
+        }
+    }
+}
+

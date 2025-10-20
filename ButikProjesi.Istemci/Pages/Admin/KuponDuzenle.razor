@@ -1,0 +1,135 @@
+@page "/admin/kuponlar/yeni"
+@page "/admin/kuponlar/duzenle/{KuponId:int}"
+@attribute [Authorize(Roles = "Admin")]
+@inject KuponServisi KuponServisi
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<MudPaper Outlined="true" Class="pa-4">
+    <MudToolBar Dense="true">
+        <MudText Typo="Typo.h6">@(IsEditMode ? "Kupon Düzenle" : "Yeni Kupon")</MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" StartIcon="@Icons.Material.Filled.ArrowBack" OnClick="GeriDon">Geri Dön</MudButton>
+    </MudToolBar>
+
+    <MudForm @ref="form" Class="mt-4">
+        <MudGrid>
+            <MudItem xs="12" md="6">
+                <MudSelect T="IndirimTipi" @bind-Value="model.Tipi" Label="İndirim Tipi" Required="true">
+                    <MudSelectItem Value="IndirimTipi.Yuzde">Yüzdelik (%)</MudSelectItem>
+                    <MudSelectItem Value="IndirimTipi.SabitTutar">Sabit Tutar (TL)</MudSelectItem>
+                </MudSelect>
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudTextField @bind-Value="model.Kod" Label="Kupon Kodu" Required="true" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudNumericField @bind-Value="model.Deger" Label="İndirim Değeri" Required="true" Min="0" />
+            </MudItem>
+            <MudItem xs="12" md="6">
+                <MudDatePicker Label="Son Geçerlilik Tarihi (İsteğe Bağlı)" 
+                              @bind-Date="model.SonGecerlilikTarihi" 
+                              MinDate="DateTime.Today" />
+            </MudItem>
+            <MudItem xs="12">
+                <MudSwitch T="bool" @bind-Checked="model.AktifMi" Label="Aktif" Color="Color.Success" />
+            </MudItem>
+        </MudGrid>
+    </MudForm>
+
+    <MudStack Direction="Direction.Row" Justify="Justify.FlexEnd" Class="mt-4">
+        <MudButton Variant="Variant.Outlined" Color="Color.Secondary" OnClick="GeriDon">İptal</MudButton>
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="Kaydet" Loading="@_kaydediliyor">Kaydet</MudButton>
+    </MudStack>
+</MudPaper>
+
+@code {
+    [Parameter] public int? KuponId { get; set; }
+    
+    private Kupon model = new();
+    private bool _kaydediliyor = false;
+    private bool IsEditMode => KuponId.HasValue;
+    MudForm form;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (IsEditMode)
+        {
+            await KuponuYukle();
+        }
+    }
+
+    private async Task KuponuYukle()
+    {
+        try
+        {
+            var kuponlar = await KuponServisi.TumKuponlariGetirAsync();
+            var kupon = kuponlar.FirstOrDefault(k => k.Id == KuponId.Value);
+            
+            if (kupon != null)
+            {
+                model = kupon;
+            }
+            else
+            {
+                Snackbar.Add("Kupon bulunamadı!", Severity.Error);
+                Navigation.NavigateTo("/admin/kupon-yonetimi");
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Kupon yüklenirken hata oluştu!", Severity.Error);
+            Console.WriteLine($"Kupon yükleme hatası: {ex.Message}");
+        }
+    }
+
+    private async Task Kaydet()
+    {
+        await form.Validate();
+        if (!form.IsValid) return;
+
+        try
+        {
+            _kaydediliyor = true;
+            StateHasChanged();
+
+
+            Kupon? sonuc;
+            if (IsEditMode)
+            {
+                // Güncelleme işlemi - şimdilik basit bir yaklaşım
+                sonuc = await KuponServisi.KuponEkleAsync(model);
+            }
+            else
+            {
+                // Yeni kupon oluşturma
+                sonuc = await KuponServisi.KuponEkleAsync(model);
+            }
+
+            if (sonuc != null)
+            {
+                Snackbar.Add(IsEditMode ? "Kupon başarıyla güncellendi!" : "Kupon başarıyla oluşturuldu!", Severity.Success);
+                Navigation.NavigateTo("/admin/kupon-yonetimi");
+            }
+            else
+            {
+                Snackbar.Add("Kupon kaydedilirken hata oluştu!", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Kupon kaydedilirken hata oluştu!", Severity.Error);
+            Console.WriteLine($"Kupon kaydetme hatası: {ex.Message}");
+        }
+        finally
+        {
+            _kaydediliyor = false;
+            StateHasChanged();
+        }
+    }
+
+    private void GeriDon()
+    {
+        Navigation.NavigateTo("/admin/kupon-yonetimi");
+    }
+}

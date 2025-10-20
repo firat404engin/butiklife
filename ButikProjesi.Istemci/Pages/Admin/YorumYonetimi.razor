@@ -1,0 +1,272 @@
+@page "/admin/yorumlar"
+@attribute [Authorize(Roles = "Admin")]
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Yorum Yönetimi - BUTIK Admin</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4 mb-6">
+    <!-- Başlık -->
+    <MudText Typo="Typo.h4" Class="mb-6" Style="font-family: 'Inter', sans-serif; font-weight: 700; color: #2c3e50;">
+        Yorum Yönetimi
+    </MudText>
+
+    @if (yorumlar == null)
+    {
+        <MudStack AlignItems="AlignItems.Center" Class="mt-8">
+            <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+            <MudText Class="mt-4">Yorumlar yükleniyor...</MudText>
+        </MudStack>
+    }
+    else if (!yorumlar.Any())
+    {
+        <MudPaper Elevation="0" Class="pa-8 text-center" Style="border: 1px solid #e0e0e0;">
+            <MudIcon Icon="@Icons.Material.Outlined.Comment" Size="Size.Large" Style="font-size: 80px; color: #cccccc;" Class="mb-4" />
+            <MudText Typo="Typo.h5" Class="mb-2" Style="font-family: 'Inter', sans-serif; font-weight: 600; color: #000000;">
+                Henüz Yorum Yok
+            </MudText>
+            <MudText Typo="Typo.body1" Style="font-family: 'Roboto', sans-serif; color: #666666;">
+                Henüz hiç yorum yapılmamış.
+            </MudText>
+        </MudPaper>
+    }
+    else
+    {
+        <!-- Yorum Listesi - Kompakt Satır Tasarımı -->
+        <MudTable Items="@yorumlar" Hover="true" Striped="true" Dense="true" FixedHeader="true" Height="600px">
+            <HeaderContent>
+                <MudTh>Ürün</MudTh>
+                <MudTh>Kullanıcı</MudTh>
+                <MudTh>Yorum</MudTh>
+                <MudTh>Puan</MudTh>
+                <MudTh>Tarih</MudTh>
+                <MudTh>Durum</MudTh>
+                <MudTh>Eylemler</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Ürün">
+                    <MudStack Direction="Direction.Row" AlignItems="AlignItems.Center" Spacing="2">
+                        <MudLink Href="@($"/urun/{context.UrunId}")" Style="text-decoration: none;">
+                            @if (!string.IsNullOrEmpty(context.UrunGorselUrl))
+                            {
+                                <img src="@context.UrunGorselUrl" alt="@context.UrunAd" style="width: 40px; height: 40px; object-fit: cover; border-radius: 6px; border: 1px solid #e0e0e0;" />
+                            }
+                            else
+                            {
+                                <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); border-radius: 6px; display: flex; align-items: center; justify-content: center; border: 1px solid #e0e0e0;">
+                                    <MudIcon Icon="@Icons.Material.Outlined.Image" Size="Size.Small" Style="color: #cbd5e1;" />
+                                </div>
+                            }
+                        </MudLink>
+                        <MudLink Href="@($"/urun/{context.UrunId}")" Style="text-decoration: none; color: inherit;">
+                            <MudText Typo="Typo.body2" Style="font-weight: 600; color: #374151;">
+                                @context.UrunAd
+                            </MudText>
+                        </MudLink>
+                    </MudStack>
+                </MudTd>
+                <MudTd DataLabel="Kullanıcı">
+                    <MudStack Direction="Direction.Column" Spacing="1">
+                        <MudText Typo="Typo.body2" Style="font-weight: 500; color: #374151;">@context.KullaniciAdSoyad</MudText>
+                        <MudText Typo="Typo.caption" Style="color: #6b7280;">@context.KullaniciEmail</MudText>
+                    </MudStack>
+                </MudTd>
+                <MudTd DataLabel="Yorum">
+                    <MudText Typo="Typo.body2" Style="color: #374151; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        @context.Metin
+                    </MudText>
+                </MudTd>
+                <MudTd DataLabel="Puan">
+                    <MudRating ReadOnly="true" SelectedValue="@context.Puan" MaxValue="5" Size="Size.Small" Color="Color.Warning" />
+                </MudTd>
+                <MudTd DataLabel="Tarih">
+                    <MudText Typo="Typo.body2" Style="color: #6b7280;">
+                        @context.YorumTarihi.ToString("dd.MM.yyyy")
+                    </MudText>
+                    <MudText Typo="Typo.caption" Style="color: #9ca3af;">
+                        @context.YorumTarihi.ToString("HH:mm")
+                    </MudText>
+                </MudTd>
+                <MudTd DataLabel="Durum">
+                    <MudChip T="string" Color="@(context.Onaylandi ? Color.Success : Color.Warning)" Size="Size.Small">
+                        @(context.Onaylandi ? "Onaylandı" : "Bekliyor")
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Eylemler">
+                    <MudStack Direction="Direction.Row" Spacing="1">
+                        @if (!context.Onaylandi)
+                        {
+                            <MudButton Variant="Variant.Outlined" Color="Color.Success" Size="Size.Small"
+                                       StartIcon="@Icons.Material.Filled.Check"
+                                       OnClick="@(() => YorumuOnayla(context.Id))">
+                                Onayla
+                            </MudButton>
+                        }
+                        <MudButton Variant="Variant.Outlined" Color="Color.Error" Size="Size.Small"
+                                   StartIcon="@Icons.Material.Filled.Delete"
+                                   OnClick="@(() => YorumuSil(context.Id))">
+                            Sil
+                        </MudButton>
+                    </MudStack>
+                </MudTd>
+            </RowTemplate>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+    }
+</MudContainer>
+
+@code {
+    private List<YorumDto>? yorumlar;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await YorumlariYukle();
+    }
+
+    private async Task YorumlariYukle()
+    {
+        try
+        {
+            var response = await HttpClient.GetAsync("api/yorumlar/tum-yorumlar");
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonContent = await response.Content.ReadAsStringAsync();
+                var yorumlarData = System.Text.Json.JsonSerializer.Deserialize<List<YorumApiDto>>(jsonContent);
+                
+                yorumlar = yorumlarData?.Select(y => new YorumDto
+                {
+                    Id = y.id,
+                    UrunId = y.urunId,
+                    UrunAd = y.urunAd,
+                    UrunGorselUrl = y.urunGorselUrl,
+                    KullaniciEmail = y.kullaniciEmail,
+                    KullaniciAdSoyad = y.kullaniciAdSoyad,
+                    Metin = y.metin,
+                    Puan = y.puan,
+                    YorumTarihi = y.yorumTarihi,
+                    IsimGosterilsin = y.isimGosterilsin,
+                    Onaylandi = y.onaylandi
+                }).ToList() ?? new List<YorumDto>();
+                
+                StateHasChanged();
+            }
+            else
+            {
+                Snackbar.Add("Yorumlar yüklenirken bir hata oluştu!", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Yorumlar yüklenirken bir hata oluştu!", Severity.Error);
+            Console.WriteLine($"Yorum yükleme hatası: {ex.Message}");
+        }
+    }
+
+    private async Task YorumuOnayla(int yorumId)
+    {
+        try
+        {
+            var response = await HttpClient.PutAsync($"api/yorumlar/{yorumId}/onayla", null);
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Yorum onaylandı!", Severity.Success);
+                await YorumlariYukle();
+            }
+            else
+            {
+                Snackbar.Add("Yorum onaylanırken hata oluştu!", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Yorum onaylanırken hata oluştu!", Severity.Error);
+            Console.WriteLine($"Yorum onaylama hatası: {ex.Message}");
+        }
+    }
+
+    private async Task YorumuSil(int yorumId)
+    {
+        try
+        {
+            var response = await HttpClient.DeleteAsync($"api/yorumlar/{yorumId}");
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Yorum silindi!", Severity.Success);
+                await YorumlariYukle();
+            }
+            else
+            {
+                Snackbar.Add("Yorum silinirken hata oluştu!", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Yorum silinirken hata oluştu!", Severity.Error);
+            Console.WriteLine($"Yorum silme hatası: {ex.Message}");
+        }
+    }
+
+    public class YorumDto
+    {
+        public int Id { get; set; }
+        public int UrunId { get; set; }
+        public string UrunAd { get; set; } = string.Empty;
+        public string UrunGorselUrl { get; set; } = string.Empty;
+        public string KullaniciEmail { get; set; } = string.Empty;
+        public string KullaniciAdSoyad { get; set; } = string.Empty;
+        public string Metin { get; set; } = string.Empty;
+        public int Puan { get; set; }
+        public DateTime YorumTarihi { get; set; }
+        public bool IsimGosterilsin { get; set; }
+        public bool Onaylandi { get; set; }
+    }
+
+    public class YorumApiDto
+    {
+        public int id { get; set; }
+        public int urunId { get; set; }
+        public string urunAd { get; set; } = string.Empty;
+        public string urunGorselUrl { get; set; } = string.Empty;
+        public string kullaniciEmail { get; set; } = string.Empty;
+        public string kullaniciAdSoyad { get; set; } = string.Empty;
+        public string metin { get; set; } = string.Empty;
+        public int puan { get; set; }
+        public DateTime yorumTarihi { get; set; }
+        public bool isimGosterilsin { get; set; }
+        public bool onaylandi { get; set; }
+    }
+}
+
+<style>
+    /* Kompakt tablo tasarımı */
+    .mud-table-cell {
+        padding: 8px 12px !important;
+    }
+    
+    .mud-table-head {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    }
+    
+    .mud-table-head .mud-table-cell {
+        color: white !important;
+        font-weight: 600 !important;
+        text-transform: uppercase !important;
+        font-size: 0.75rem !important;
+        letter-spacing: 0.5px !important;
+    }
+    
+    .mud-table-row:hover {
+        background-color: #f8fafc !important;
+    }
+    
+    /* Responsive tasarım */
+    @@media (max-width: 768px) {
+        .mud-table-cell {
+            padding: 6px 8px !important;
+            font-size: 0.875rem !important;
+        }
+    }
+</style>

@@ -1,0 +1,418 @@
+@page "/urun/{id:int}"
+@using ButikProjesi.Shared.Modeller
+@using ButikProjesi.Istemci.Servisler
+@using Microsoft.AspNetCore.Components.Authorization
+@inject UrunServisi UrunServisi
+@inject SepetServisi SepetServisi
+@inject YorumServisi YorumServisi
+@inject FavoriServisi FavoriServisi
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>@(urun?.Ad ?? "Ürün Detayı") - BUTIK</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-16">
+    @if (yukleniyor)
+    {
+        <div class="d-flex justify-center align-center" style="min-height: 500px;">
+            <div class="text-center">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                <MudText Typo="Typo.h6" Class="mt-4">Ürün bilgileri yükleniyor...</MudText>
+            </div>
+        </div>
+    }
+    else if (urun == null)
+    {
+        <MudPaper Elevation="0" Class="pa-8 text-center" Style="border: 1px solid #e0e0e0;">
+            <MudIcon Icon="@Icons.Material.Outlined.SearchOff" Size="Size.Large" Style="font-size: 80px; color: #cccccc;" />
+            <MudText Typo="Typo.h5" Class="mt-4 mb-2">Ürün Bulunamadı</MudText>
+            <MudText Typo="Typo.body1" Class="mb-4">Aradığınız ürün bulunamadı.</MudText>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.ArrowBack" 
+                       OnClick="@(() => Navigation.NavigateTo("/urunler"))">
+                Ürünlere Dön
+            </MudButton>
+        </MudPaper>
+    }
+    else
+    {
+        <!-- Breadcrumb Navigasyon -->
+        <MudBreadcrumbs Items="@breadcrumbItems" Separator="/" Class="mb-6" Style="font-family: 'Roboto', sans-serif;">
+            <ItemTemplate Context="item">
+                @if (item.Disabled)
+                {
+                    <MudText Typo="Typo.body1" Style="color: #000000; font-weight: 500;">@item.Text</MudText>
+                }
+                else
+                {
+                    <MudLink Href="@item.Href" Underline="Underline.Hover" Style="color: #666666;">@item.Text</MudLink>
+                }
+            </ItemTemplate>
+        </MudBreadcrumbs>
+
+        <!-- Ana İki Sütunlu Düzen -->
+        <MudGrid>
+            <!-- SOL SÜTUN - ÜRÜN GÖRSELİ (6/12) -->
+            <MudItem xs="12" md="6">
+                <div style="width: 100%; min-height: 500px; display: flex; align-items: center; justify-content: center; background: #fafafa; border-radius: 12px;">
+                    @if (!string.IsNullOrEmpty(urun.GorselUrl))
+                    {
+                        <img src="@urun.GorselUrl" 
+                             alt="@urun.Ad" 
+                             style="max-width: 100%; max-height: 600px; object-fit: contain; border-radius: 8px;" />
+                    }
+                    else
+                    {
+                        <div style="text-align: center; padding: 60px;">
+                            <MudIcon Icon="@Icons.Material.Outlined.Image" Size="Size.Large" Style="font-size: 120px; color: #ddd; margin-bottom: 16px;" />
+                            <MudText Typo="Typo.body1" Style="color: #999;">Görsel bulunamadı</MudText>
+                        </div>
+                    }
+                </div>
+            </MudItem>
+            
+            <!-- SAĞ SÜTUN - ÜRÜN BİLGİLERİ (6/12) -->
+            <MudItem xs="12" md="6">
+                <MudStack Spacing="3">
+                    
+                    <!-- Ürün Adı -->
+                    <MudText Typo="Typo.h4" Style="font-weight: 600; color: #000; line-height: 1.3;">
+                        @urun.Ad
+                    </MudText>
+                    
+                    <!-- Kategori Chip -->
+                    @if (urun.Kategori != null)
+                    {
+                        <MudChip T="string" Variant="Variant.Outlined" Size="Size.Small" Style="width: fit-content;">
+                            @urun.Kategori.Ad
+                        </MudChip>
+                    }
+                    
+                    <!-- Yıldızlı Puan ve Değerlendirme -->
+                    @if (urunDto != null && urunDto.YorumSayisi > 0)
+                    {
+                        <div class="d-flex align-center" style="gap: 12px;">
+                            <MudRating ReadOnly="true" 
+                                      SelectedValue="@((int)Math.Round(urunDto.OrtalamaPuan))" 
+                                      MaxValue="5" 
+                                      Size="Size.Small" 
+                                      Color="Color.Warning" />
+                            <MudText Typo="Typo.body2" Style="color: #666;">
+                                (@urunDto.YorumSayisi değerlendirme)
+                            </MudText>
+                            <MudLink Href="#yorumlar" Style="color: #007bff; text-decoration: underline;">
+                                Tüm Değerlendirmeleri Gör
+                            </MudLink>
+                        </div>
+                    }
+                    
+                    <!-- Fiyat Bloğu -->
+                    <div class="d-flex align-center" style="gap: 12px; flex-wrap: wrap;">
+                        @if (urun.EskiFiyat.HasValue && urun.EskiFiyat.Value > urun.Fiyat)
+                        {
+                            <MudText Typo="Typo.body1" Style="color:#9ca3af; text-decoration: line-through;">
+                                @urun.EskiFiyat.Value.ToString("C", new System.Globalization.CultureInfo("tr-TR"))
+                            </MudText>
+                            var indirimOrani = (int)Math.Round((double)((urun.EskiFiyat.Value - urun.Fiyat) / urun.EskiFiyat.Value * 100));
+                            <MudChip T="string" Color="Color.Success" Size="Size.Small" Variant="Variant.Filled">
+                                %@indirimOrani İndirim
+                            </MudChip>
+                        }
+                        <MudText Typo="Typo.h5" Color="Color.Primary" Style="font-weight: 600;">
+                            @urun.Fiyat.ToString("C", new System.Globalization.CultureInfo("tr-TR"))
+                        </MudText>
+                    </div>
+                    
+                    <!-- Stok Durumu -->
+                    <MudText Typo="Typo.body2" Style="color: #666;">
+                        Stok Durumu: @urun.StokAdedi adet
+                    </MudText>
+                    
+                    <!-- Eylem Alanı -->
+                    <MudPaper Elevation="1" Class="pa-4" Style="border: 1px solid #e0e0e0; border-radius: 12px;">
+                        <MudStack Spacing="3">
+                            <!-- Adet Seçimi -->
+                            <div class="d-flex align-center" style="gap: 16px;">
+                                <MudText Typo="Typo.body1" Style="font-weight: 500;">Adet:</MudText>
+                                <MudNumericField @bind-Value="adet" 
+                                                Min="1" 
+                                                Max="@urun.StokAdedi" 
+                                                Variant="Variant.Outlined" 
+                                                Style="width: 100px;" />
+                            </div>
+                            
+                            <!-- Sepete Ekle Butonu -->
+                            @if (urun.StokAdedi > 0)
+                            {
+                                <MudButton Variant="Variant.Filled" 
+                                          Color="Color.Primary" 
+                                          Size="Size.Large" 
+                                          FullWidth="true"
+                                          StartIcon="@Icons.Material.Filled.ShoppingCart"
+                                          Loading="@_isAddingToCart"
+                                          Style="height: 54px; font-weight: 600; text-transform: none; font-size: 16px; border-radius: 25px; background-color: #f8f9fa; color: #495057; border: 1px solid #dee2e6;"
+                                          OnClick="@HandleSepeteEkle">
+                                    Sepete Ekle
+                                </MudButton>
+                            }
+                            else
+                            {
+                                <MudButton Variant="Variant.Outlined" 
+                                          Color="Color.Default" 
+                                          Size="Size.Large" 
+                                          FullWidth="true"
+                                          Disabled="true"
+                                          Style="height: 54px;">
+                                    Stokta Yok
+                                </MudButton>
+                            }
+                            
+                            <!-- Favori Butonu -->
+                            <AuthorizeView>
+                                <Authorized>
+                                    <MudIconButton Icon="@(favoride ? Icons.Material.Filled.Favorite : Icons.Material.Outlined.FavoriteBorder)"
+                                                  Color="@(favoride ? Color.Error : Color.Default)"
+                                                  Size="Size.Small"
+                                                  Style="@(favoride ? "color: #dc2626 !important; background: none !important; box-shadow: none !important;" : "")"
+                                                  OnClick="@FavoriToggle" />
+                                </Authorized>
+                                <NotAuthorized>
+                                    <MudButton Variant="Variant.Outlined" 
+                                              Color="Color.Default" 
+                                              Size="Size.Small" 
+                                              StartIcon="@Icons.Material.Outlined.FavoriteBorder"
+                                              OnClick="@(() => Navigation.NavigateTo("/giris-yap"))">
+                                        Favorilere Ekle
+                                    </MudButton>
+                                </NotAuthorized>
+                            </AuthorizeView>
+                        </MudStack>
+                    </MudPaper>
+                    
+                    <!-- Ürün Değerlendirmeleri -->
+                    @if (yorumlar != null && yorumlar.Any())
+                    {
+                        <MudDivider Class="my-4" />
+                        
+                        <MudText Typo="Typo.h6" Style="font-weight: 600; color: #000; margin-bottom: 16px;">
+                            Ürün Değerlendirmeleri
+                        </MudText>
+                        
+                        <MudStack Spacing="3">
+                            @foreach (var yorum in yorumlar.Take(3))
+                            {
+                                <MudCard Elevation="1" Style="border: 1px solid #e0e0e0;">
+                                    <MudCardContent>
+                                        <div class="d-flex justify-space-between align-center mb-3">
+                                            <div class="d-flex align-center" style="gap: 12px;">
+                                                <MudAvatar Color="Color.Primary" Size="Size.Medium">
+                                                    @yorum.GetProperty("gosterilecekAd").GetString()?[0]
+                                                </MudAvatar>
+                                                <div>
+                                                    <MudText Typo="Typo.subtitle2" Style="font-weight: 600; color: #000;">
+                                                        @yorum.GetProperty("gosterilecekAd").GetString()
+                                                    </MudText>
+                                                    <MudText Typo="Typo.caption" Style="color: #999;">
+                                                        @yorum.GetProperty("yorumTarihi").GetDateTime().ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))
+                                                    </MudText>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <MudRating ReadOnly="true" 
+                                                  SelectedValue="@yorum.GetProperty("puan").GetInt32()" 
+                                                  MaxValue="5" 
+                                                  Size="Size.Small"
+                                                  Color="Color.Warning"
+                                                  Class="mb-2" />
+                                        <MudText Typo="Typo.body2" Style="color: #555; line-height: 1.6;">
+                                            @yorum.GetProperty("metin").GetString()
+                                        </MudText>
+                                    </MudCardContent>
+                                </MudCard>
+                            }
+                        </MudStack>
+                    }
+                    
+                </MudStack>
+            </MudItem>
+        </MudGrid>
+        
+        <!-- Ayırıcı -->
+        <MudDivider Class="my-8" />
+        
+        <!-- Ürün Detayları - Expansion Panels -->
+        <MudExpansionPanels MultiExpansion="true">
+            <MudExpansionPanel IsInitiallyExpanded="true">
+                <TitleContent>
+                    <MudText Typo="Typo.h6" Style="font-weight: 600;">Ürün Açıklaması</MudText>
+                </TitleContent>
+                <ChildContent>
+                    <MudText Typo="Typo.body1" Style="line-height: 1.8; color: #555; white-space: pre-line;">
+                        @urun.Aciklama
+                    </MudText>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel>
+                <TitleContent>
+                    <MudText Typo="Typo.h6" Style="font-weight: 600;">Teknik Özellikler</MudText>
+                </TitleContent>
+                <ChildContent>
+                    <MudText Typo="Typo.body1" Style="color: #666;">
+                        Teknik özellikler yakında eklenecek.
+                    </MudText>
+                </ChildContent>
+            </MudExpansionPanel>
+
+            <MudExpansionPanel>
+                <TitleContent>
+                    <MudText Typo="Typo.h6" Style="font-weight: 600;">Teslimat & İade</MudText>
+                </TitleContent>
+                <ChildContent>
+                    <MudText Typo="Typo.body1" Style="color: #666;">
+                        Teslimat ve iade bilgileri yakında eklenecek.
+                    </MudText>
+                </ChildContent>
+            </MudExpansionPanel>
+        </MudExpansionPanels>
+    }
+</MudContainer>
+
+@code {
+    [Parameter] public int Id { get; set; }
+    
+    private Urun? urun;
+    private UrunDto? urunDto;
+    private bool yukleniyor = true;
+    private List<System.Text.Json.JsonElement>? yorumlar;
+    private bool favoride = false;
+    private bool kullaniciGirisYapti = false;
+    private int adet = 1;
+    private bool _isAddingToCart = false;
+    private List<BreadcrumbItem> breadcrumbItems = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Kullanıcı giriş durumunu kontrol et
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            kullaniciGirisYapti = authState.User.Identity?.IsAuthenticated ?? false;
+            
+            // Breadcrumb'ları ayarla
+            breadcrumbItems = new List<BreadcrumbItem>
+            {
+                new BreadcrumbItem("Ana Sayfa", "/", disabled: false),
+                new BreadcrumbItem("Koleksiyon", "/urunler", disabled: false),
+                new BreadcrumbItem("Ürün Detayı", null, disabled: true)
+            };
+            
+            // Ürün bilgilerini getir
+            urun = await UrunServisi.UrunGetirByIdAsync(Id);
+            
+            if (urun != null)
+            {
+                // Breadcrumb'ı güncelle
+                breadcrumbItems[2] = new BreadcrumbItem(urun.Ad, null, disabled: true);
+                
+                // Yorumları yükle
+                await YorumlariYukle();
+                
+                // Favori durumunu kontrol et
+                if (kullaniciGirisYapti)
+                {
+                    favoride = await FavoriServisi.FavoriKontrolAsync(Id);
+                }
+                
+                // UrunDto al (puan ve yorum sayısı için)
+                var tumUrunlerDto = await UrunServisi.UrunleriGetirAsync();
+                urunDto = tumUrunlerDto?.FirstOrDefault(u => u.Id == Id);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ürün detayları yüklenirken hata oluştu: {ex.Message}");
+            Snackbar.Add("Ürün detayları yüklenirken bir hata oluştu!", Severity.Error);
+        }
+        finally
+        {
+            yukleniyor = false;
+        }
+    }
+
+    private async Task YorumlariYukle()
+    {
+        try
+        {
+            yorumlar = await YorumServisi.YorumlariGetirAsync(Id);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Yorumlar yüklenirken hata oluştu: {ex.Message}");
+            yorumlar = new List<System.Text.Json.JsonElement>();
+        }
+    }
+    
+    private async Task HandleSepeteEkle()
+    {
+        try
+        {
+            _isAddingToCart = true;
+            StateHasChanged();
+            
+            // Animasyonun görünür olması için kısa bir gecikme
+            await Task.Delay(500);
+            
+            await SepetServisi.SepeteEkle(urun!, adet);
+            Snackbar.Add($"🛒 {urun!.Ad} sepete eklendi!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("❌ Ürün sepete eklenirken hata oluştu!", Severity.Error);
+            Console.WriteLine($"Sepete ekleme hatası: {ex.Message}");
+        }
+        finally
+        {
+            _isAddingToCart = false;
+            StateHasChanged();
+        }
+    }
+    
+    private async Task FavoriToggle()
+    {
+        try
+        {
+            if (favoride)
+            {
+                var (basarili, mesaj) = await FavoriServisi.FavoriSilAsync(Id);
+                if (basarili)
+                {
+                    favoride = false;
+                    Snackbar.Add("Favorilerden çıkarıldı", Severity.Info);
+                }
+                else
+                {
+                    Snackbar.Add(mesaj, Severity.Error);
+                }
+            }
+            else
+            {
+                var (basarili, mesaj) = await FavoriServisi.FavoriEkleAsync(Id);
+                if (basarili)
+                {
+                    favoride = true;
+                    Snackbar.Add("Favorilere eklendi!", Severity.Success);
+                }
+                else
+                {
+                    Snackbar.Add(mesaj, Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Favori işlemi hatası: {ex.Message}");
+            Snackbar.Add("İşlem sırasında bir hata oluştu!", Severity.Error);
+        }
+    }
+}

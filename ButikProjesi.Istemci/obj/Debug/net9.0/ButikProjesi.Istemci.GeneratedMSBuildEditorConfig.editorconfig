@@ -1,0 +1,188 @@
+is_global = true
+build_property.EnableAotAnalyzer = 
+build_property.EnableSingleFileAnalyzer = 
+build_property.EnableTrimAnalyzer = false
+build_property.IncludeAllContentForSelfExtract = 
+build_property.MudDebugAnalyzer = 
+build_property.MudAllowedAttributePattern = 
+build_property.MudAllowedAttributeList = 
+build_property.TargetFramework = net9.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = 
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = false
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = browser
+build_property.RootNamespace = ButikProjesi.Istemci
+build_property.RootNamespace = ButikProjesi.Istemci
+build_property.ProjectDir = C:\Users\Firat\Desktop\butiklife\ButikProjesi.Istemci\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = false
+build_property.RazorLangVersion = 9.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Users\Firat\Desktop\butiklife\ButikProjesi.Istemci
+build_property._RazorSourceGeneratorDebug = 
+build_property.EffectiveAnalysisLevelStyle = 9.0
+build_property.EnableCodeStyleSeverity = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Admin/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Admin/KategoriDuzenle.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cS2F0ZWdvcmlEdXplbmxlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Admin/KategoriYonetimi.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cS2F0ZWdvcmlZb25ldGltaS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Admin/KuponDuzenle.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cS3Vwb25EdXplbmxlLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Admin/KuponYonetimi.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cS3Vwb25Zb25ldGltaS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Admin/MusteriDetay.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cTXVzdGVyaURldGF5LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Admin/Musteriler.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cTXVzdGVyaWxlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Admin/SiparisDetay.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cU2lwYXJpc0RldGF5LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Admin/SiparisYonetimi.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cU2lwYXJpc1lvbmV0aW1pLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Admin/UrunDuzenle.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cVXJ1bkR1emVubGUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Admin/UrunYonetimi.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cVXJ1bllvbmV0aW1pLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Admin/YorumYonetimi.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cWW9ydW1Zb25ldGltaS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Admin/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQWRtaW5cX0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Auth/GirisYap.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXV0aFxHaXJpc1lhcC5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Auth/KayitOl.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXV0aFxLYXlpdE9sLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Favorilerim.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRmF2b3JpbGVyaW0ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Gizlilik.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcR2l6bGlsaWsucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Hakkimizda.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSGFra2ltaXpkYS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Home.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSG9tZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Iade.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSWFkZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Iletisim.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSWxldGlzaW0ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Profil.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUHJvZmlsLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Sartlar.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2FydGxhci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Sepet.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2VwZXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/SiparisBasarili.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2lwYXJpc0Jhc2FyaWxpLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/SiparisTamamla.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcU2lwYXJpc1RhbWFtbGEucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/UrunDetay.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXJ1bkRldGF5LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Pages/Urunler.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcVXJ1bmxlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Shared/AdminLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXEFkbWluTGF5b3V0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Shared/AdminNavMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXEFkbWluTmF2TWVudS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Shared/BildirimDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXEJpbGRpcmltRGlhbG9nLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Shared/Footer.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXEZvb3Rlci5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Shared/LoadingScreen.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXExvYWRpbmdTY3JlZW4ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Shared/RootLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXFJvb3RMYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Shared/YorumDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXFlvcnVtRGlhbG9nLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Shared/YorumYapDialog.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXFlvcnVtWWFwRGlhbG9nLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Layout/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = TGF5b3V0XE1haW5MYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-7gt2k6f62g
+
+[C:/Users/Firat/Desktop/butiklife/ButikProjesi.Istemci/Layout/NavMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = TGF5b3V0XE5hdk1lbnUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = b-bua54t1v2a

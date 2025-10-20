@@ -1,0 +1,160 @@
+@layout RootLayout
+@inherits LayoutComponentBase
+@using MudBlazor
+
+<MudLayout Class="admin-layout">
+    <!-- Modern Header -->
+    <MudAppBar Elevation="0" Dense="true" Class="modern-header" Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);">
+        <MudIconButton Icon="@Icons.Material.Filled.Menu" Color="Color.Inherit" Edge="Edge.Start" OnClick="@DrawerToggle" 
+                       Style="color: white; background: rgba(255, 255, 255, 0.1); border-radius: 8px; margin: 4px;" />
+        <MudStack Direction="Direction.Row" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.AdminPanelSettings" Style="color: white; font-size: 24px;" />
+            <MudText Typo="Typo.h6" Style="color: white; font-weight: 700; font-family: 'Inter', sans-serif;">
+                BUTIK Admin
+            </MudText>
+        </MudStack>
+        <MudSpacer />
+        <MudStack Direction="Direction.Row" AlignItems="AlignItems.Center" Spacing="1">
+            <MudTooltip Text="Karanlık/Aydınlık Mod">
+                <MudIconButton Icon="@(_isDarkMode ? Icons.Material.Filled.WbSunny : Icons.Material.Filled.Brightness4)" 
+                               Color="Color.Inherit" OnClick="@ToggleDarkMode"
+                               Style="color: white; background: rgba(255, 255, 255, 0.1); border-radius: 8px; margin: 4px;" />
+            </MudTooltip>
+            <MudTooltip Text="Ana Siteye Git">
+                <MudIconButton Icon="@Icons.Material.Filled.Home" Color="Color.Inherit" Href="/" Target="_blank"
+                               Style="color: white; background: rgba(255, 255, 255, 0.1); border-radius: 8px; margin: 4px;" />
+            </MudTooltip>
+        </MudStack>
+    </MudAppBar>
+
+    <!-- Modern Sidebar -->
+    <MudDrawer @bind-Open="_drawerOpen" ClipMode="DrawerClipMode.Always" Elevation="0" Variant="@DrawerVariant.Responsive"
+                Class="modern-sidebar" Style="background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%); border-right: 1px solid #e2e8f0;">
+        <AdminNavMenu />
+    </MudDrawer>
+
+    <!-- Main Content Area -->
+    <MudMainContent Class="modern-main-content" Style="background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%); min-height: 100vh; padding: 0;">
+        <MudContainer MaxWidth="MaxWidth.False" Class="content-container" Style="padding: 24px; margin-top: 0;">
+            @Body
+        </MudContainer>
+    </MudMainContent>
+</MudLayout>
+
+@code {
+    private bool _drawerOpen = true;
+    private bool _isDarkMode = false;
+
+    private void DrawerToggle()
+    {
+        _drawerOpen = !_drawerOpen;
+    }
+
+    private void ToggleDarkMode()
+    {
+        _isDarkMode = !_isDarkMode;
+    }
+}
+
+<style>
+    /* Modern Admin Layout Styles */
+    .admin-layout {
+        font-family: 'Inter', sans-serif;
+    }
+    
+    /* Modern Header */
+    .modern-header {
+        backdrop-filter: blur(10px);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .modern-header .mud-icon-button {
+        transition: all 0.3s ease;
+    }
+    
+    .modern-header .mud-icon-button:hover {
+        background: rgba(255, 255, 255, 0.2) !important;
+        transform: scale(1.05);
+    }
+    
+    /* Modern Sidebar */
+    .modern-sidebar {
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .modern-nav-menu {
+        padding: 16px 0;
+    }
+    
+    .modern-nav-link {
+        margin: 4px 12px;
+        border-radius: 12px !important;
+        transition: all 0.3s ease !important;
+        background: transparent !important;
+        border: none !important;
+        padding: 12px 16px !important;
+    }
+    
+    .modern-nav-link:hover {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        transform: translateX(4px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .modern-nav-link.mud-nav-link-active {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .modern-nav-link .mud-icon {
+        transition: all 0.3s ease;
+    }
+    
+    .modern-nav-link:hover .mud-icon {
+        transform: scale(1.1);
+    }
+    
+    /* Main Content */
+    .modern-main-content {
+        position: relative;
+        z-index: 1;
+    }
+    
+    .content-container {
+        position: relative;
+        z-index: 2;
+    }
+    
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .modern-nav-link {
+            margin: 2px 8px;
+            padding: 10px 12px !important;
+        }
+        
+        .content-container {
+            padding: 16px !important;
+        }
+    }
+    
+    /* Scrollbar Styling */
+    .modern-sidebar::-webkit-scrollbar {
+        width: 6px;
+    }
+    
+    .modern-sidebar::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+    
+    .modern-sidebar::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+    
+    .modern-sidebar::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+    }
+</style>

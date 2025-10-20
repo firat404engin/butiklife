@@ -1,0 +1,104 @@
+@using MudBlazor
+
+<MudDialog>
+    <DialogContent>
+        <MudStack Spacing="3">
+            <MudText Typo="Typo.h6" Style="font-weight: 600; color: #2c3e50;">
+                "@UrunAdi" için Yorum Yap
+            </MudText>
+            
+            <div>
+                <MudText Typo="Typo.subtitle2" Class="mb-2" Style="font-weight: 600;">Puanınız</MudText>
+                <MudRating @bind-SelectedValue="Puan" Size="Size.Large" Color="Color.Warning" MaxValue="5" />
+            </div>
+            
+            <MudTextField @bind-Value="Metin" 
+                         Label="Yorumunuz" 
+                         Variant="Variant.Outlined" 
+                         Lines="5" 
+                         Counter="1000"
+                         MaxLength="1000"
+                         HelperText="En az 10 karakter girmelisiniz" />
+            
+            <MudCheckBox @bind-Value="IsimGosterilsin" 
+                        Label="Adım ve soyadım yorumda gözüksün" 
+                        Color="Color.Primary" />
+            
+            @if (!IsimGosterilsin)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+                    Yorumunuz baş harflerinizle gösterilecektir (örn: F. E.)
+                </MudAlert>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Vazgeç</MudButton>
+        <MudButton Variant="Variant.Filled" 
+                  Color="Color.Primary" 
+                  OnClick="Submit"
+                  Disabled="@(!IsValid)">
+            Yorumu Gönder
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@inject IDialogService DialogService
+
+@code {
+    [Parameter]
+    public int UrunId { get; set; }
+    
+    [Parameter]
+    public string UrunAdi { get; set; } = string.Empty;
+
+    [Parameter]
+    public EventCallback<YorumModel> OnYorumGonder { get; set; }
+
+    [Parameter]
+    public EventCallback OnCancel { get; set; }
+
+    public int Puan { get; set; } = 5;
+    public string Metin { get; set; } = string.Empty;
+    public bool IsimGosterilsin { get; set; } = true;
+
+    private bool IsValid => Puan >= 1 && Puan <= 5 
+                         && !string.IsNullOrWhiteSpace(Metin) 
+                         && Metin.Length >= 10;
+
+    async Task Submit()
+    {
+        Console.WriteLine($"✅ Submit - Puan: {Puan}, Metin: '{Metin}'");
+        
+        if (!IsValid)
+        {
+            Console.WriteLine("❌ Form geçersiz!");
+            return;
+        }
+        
+        var result = new YorumModel
+        {
+            UrunId = this.UrunId,
+            Puan = this.Puan,
+            Metin = this.Metin,
+            IsimGosterilsin = this.IsimGosterilsin
+        };
+        
+        Console.WriteLine($"🚀 OnYorumGonder tetikleniyor...");
+        await OnYorumGonder.InvokeAsync(result);
+    } 
+    
+    async Task Cancel()
+    {
+        Console.WriteLine("🚫 Vazgeç");
+        await OnCancel.InvokeAsync();
+    }
+
+    public class YorumModel
+    {
+        public int UrunId { get; set; }
+        public int Puan { get; set; }
+        public string Metin { get; set; } = string.Empty;
+        public bool IsimGosterilsin { get; set; }
+    }
+}

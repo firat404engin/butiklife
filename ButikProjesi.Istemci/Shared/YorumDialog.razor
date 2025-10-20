@@ -1,0 +1,98 @@
+@using MudBlazor
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.h6" Class="mb-4">@UrunAdi için Yorum Yap</MudText>
+        
+        <MudStack Spacing="3">
+            <div>
+                <MudText Typo="Typo.subtitle2" Class="mb-2" Style="font-weight: 600;">Puanınız</MudText>
+                <MudRating @bind-SelectedValue="puan" Size="Size.Large" Color="Color.Warning" MaxValue="5" />
+            </div>
+            
+            <MudTextField @bind-Value="metin" 
+                         Label="Yorumunuz" 
+                         Variant="Variant.Outlined" 
+                         Lines="5" 
+                         Counter="1000"
+                         MaxLength="1000"
+                         HelperText="En az 10 karakter girmelisiniz" />
+            
+            <MudCheckBox @bind-Value="isimGosterilsin" 
+                        Label="Adım ve soyadım yorumda gözüksün" 
+                        Color="Color.Primary" />
+            
+            @if (!isimGosterilsin)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+                    Yorumunuz baş harflerinizle gösterilecektir (örn: F. E.)
+                </MudAlert>
+            }
+        </MudStack>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Vazgeç</MudButton>
+        <MudButton Variant="Variant.Filled" 
+                  Color="Color.Primary" 
+                  OnClick="Submit"
+                  Disabled="@(!IsValid)">
+            Yorumu Gönder
+        </MudButton>
+    </DialogActions>
+</MudDialog>
+
+@code {
+    [CascadingParameter] 
+    MudBlazor.IDialogReference? MudDialog { get; set; }
+
+    [Parameter]
+    public int UrunId { get; set; }
+    
+    [Parameter]
+    public string UrunAdi { get; set; } = string.Empty;
+
+    private int puan = 5;
+    private string metin = string.Empty;
+    private bool isimGosterilsin = true;
+
+    private bool IsValid => puan >= 1 && puan <= 5 
+                         && !string.IsNullOrWhiteSpace(metin) 
+                         && metin.Length >= 10;
+
+    void Submit()
+    {
+        Console.WriteLine($"✅ Submit çağrıldı - Puan: {puan}, Metin uzunluğu: {metin.Length}");
+        
+        if (!IsValid)
+        {
+            Console.WriteLine("❌ Form geçersiz!");
+            return;
+        }
+
+        var result = new YorumData
+        {
+            UrunId = this.UrunId,
+            Puan = this.puan,
+            Metin = this.metin,
+            IsimGosterilsin = this.isimGosterilsin
+        };
+
+        Console.WriteLine($"🚀 Dialog kapatılıyor, sonuç döndürülüyor...");
+        MudDialog?.Close(DialogResult.Ok(result));
+    }
+
+    void Cancel()
+    {
+        Console.WriteLine("🚫 Cancel");
+        MudDialog?.Close(DialogResult.Cancel());
+    }
+
+    public class YorumData
+    {
+        public int UrunId { get; set; }
+        public int Puan { get; set; }
+        public string Metin { get; set; } = string.Empty;
+        public bool IsimGosterilsin { get; set; }
+    }
+}
+

@@ -1,0 +1,56 @@
+@page "/hakkimizda"
+@using MudBlazor
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-16 mb-16">
+    
+    <MudText Typo="Typo.h3" Align="Align.Center" GutterBottom="true">Hikayemiz</MudText>
+    <MudText Typo="Typo.h6" Align="Align.Center" Color="Color.Dark" Class="mb-8" Style="max-width: 700px; margin: auto;">
+        Kaliteyi, estetiği ve modernizmi her dikişinde hisseden bir marka yaratma hayaliyle yola çıktık.
+    </MudText>
+
+    <MudGrid Spacing="4" Class="mt-8">
+        <MudItem xs="12" md="6" Class="d-flex align-center">
+            <MudPaper Elevation="0" Class="pa-4" Style="background: transparent;">
+                <MudText Typo="Typo.h5" GutterBottom="true">Felsefemiz</MudText>
+                <MudText Typo="Typo.body1" Class="mb-4">
+                    BUTİK olarak, modanın sadece giyimden ibaret olmadığına inanıyoruz. O, bir ifade biçimi, bir sanat ve bir yaşam tarzıdır. Bu inançla, her koleksiyonumuzu en kaliteli kumaşları, yenilikçi tasarımları ve kusursuz işçiliği bir araya getirerek hazırlıyoruz.
+                </MudText>
+                <MudText Typo="Typo.body1">
+                    Sade ama güçlü, zamansız ama modern parçalarla, gardırobunuzun temel taşlarını oluşturmayı hedefliyoruz.
+                </MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" md="6">
+            <MudPaper Elevation="2" Class="rounded-lg">
+                <img src="https://images.pexels.com/photos/322207/pexels-photo-322207.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" style="width: 100%; height: auto; border-radius: 8px;" alt="Tasarım Atölyesi" />
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudDivider Class="my-12" />
+
+    <MudText Typo="Typo.h4" Align="Align.Center" GutterBottom="true" Class="mb-8">Değerlerimiz</MudText>
+    <MudGrid Spacing="4">
+        <MudItem xs="12" sm="4">
+            <MudPaper Outlined="true" Elevation="0" Class="pa-6 text-center">
+                <MudIcon Icon="@Icons.Material.Filled.HighQuality" Color="Color.Primary" Style="font-size: 48px;" />
+                <MudText Typo="Typo.h6" Class="mt-4">Kalite</MudText>
+                <MudText Typo="Typo.body2">Kumaştan dikişe, her detayda en yüksek standardı hedefliyoruz.</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudPaper Outlined="true" Elevation="0" Class="pa-6 text-center">
+                <MudIcon Icon="@Icons.Material.Filled.Brush" Color="Color.Primary" Style="font-size: 48px;" />
+                <MudText Typo="Typo.h6" Class="mt-4">Özgün Tasarım</MudText>
+                <MudText Typo="Typo.body2">Moda akımlarını, kendi minimalist ve modern çizgimizle yeniden yorumluyoruz.</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="4">
+            <MudPaper Outlined="true" Elevation="0" Class="pa-6 text-center">
+                <MudIcon Icon="@Icons.Material.Filled.Recycling" Color="Color.Primary" Style="font-size: 48px;" />
+                <MudText Typo="Typo.h6" Class="mt-4">Sürdürülebilirlik</MudText>
+                <MudText Typo="Typo.body2">Doğaya saygılı üretim süreçleri ve zamansız parçalarla geleceğe yatırım yapıyoruz.</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+</MudContainer>

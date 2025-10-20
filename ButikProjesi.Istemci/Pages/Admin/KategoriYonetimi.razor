@@ -1,0 +1,90 @@
+@page "/admin/kategoriler"
+@attribute [Authorize(Roles = "Admin")]
+@inject UrunServisi UrunServisi
+@inject ISnackbar Snackbar
+@* Dialog tabanlı akış kaldırıldı *@
+
+<PageTitle>Kategori Yönetimi - BUTIK Admin</PageTitle>
+
+<MudPaper Outlined="false" Elevation="0" Class="pa-4">
+    <MudToolBar Dense="false" Class="mb-4" Style="background: transparent; padding: 0;">
+        <MudText Typo="Typo.h4" Style="font-family: 'Inter', sans-serif; font-weight: 700; color: #2c3e50;">
+            Kategori Yönetimi
+        </MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" Size="Size.Medium" StartIcon="@Icons.Material.Filled.Add" Href="/admin/kategoriler/yeni">
+            Yeni Kategori Ekle
+        </MudButton>
+    </MudToolBar>
+
+    @if (kategoriler == null)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+        <MudText Class="mt-4">Kategoriler yükleniyor...</MudText>
+    }
+    else
+    {
+        <MudPaper Outlined="true" Style="overflow-x: auto;">
+            <MudTable Items="@kategoriler" Hover="true" Dense="true" Outlined="true" Elevation="0">
+            <HeaderContent>
+                <MudTh>ID</MudTh>
+                <MudTh>Ad</MudTh>
+                <MudTh>Görsel</MudTh>
+                <MudTh>İşlemler</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="ID">@context.Id</MudTd>
+                <MudTd DataLabel="Ad">@context.Ad</MudTd>
+                <MudTd DataLabel="Görsel">
+                    @if (!string.IsNullOrEmpty(context.GorselUrl))
+                    {
+                        <img src="@context.GorselUrl" alt="@context.Ad" style="width: 50px; height: 50px; object-fit: cover; border-radius: 8px;" />
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.caption" Style="color: #9ca3af;">Görsel yok</MudText>
+                    }
+                </MudTd>
+                <MudTd DataLabel="İşlemler">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Color="Color.Default" Href="@($"/admin/kategoriler/duzenle/{context.Id}")" />
+                    <MudIconButton Icon="@Icons.Material.Filled.Delete" Color="Color.Error" OnClick="@(() => Sil(context.Id))" />
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+        </MudPaper>
+    }
+</MudPaper>
+
+@code {
+    private List<Kategori>? kategoriler;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await Yukle();
+    }
+
+    private async Task Yukle()
+    {
+        kategoriler = await UrunServisi.KategorileriGetirAsync();
+        StateHasChanged();
+    }
+
+    // Diyalog kaldırıldı; ekleme/düzenleme artık sayfalarda yapılıyor
+
+    private async Task Sil(int id)
+    {
+        if (await UrunServisi.KategoriSilAsync(id))
+        {
+            Snackbar.Add("Kategori silindi", Severity.Success);
+            await Yukle();
+        }
+        else
+        {
+            Snackbar.Add("Kategori silinemedi", Severity.Error);
+        }
+    }
+
+    
+}
+
+

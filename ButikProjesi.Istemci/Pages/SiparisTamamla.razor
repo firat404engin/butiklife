@@ -1,0 +1,439 @@
+@page "/siparis-tamamla"
+@attribute [Microsoft.AspNetCore.Authorization.Authorize]
+@using ButikProjesi.Istemci.Modeller
+@using ButikProjesi.Istemci.Servisler
+@inject SepetServisi SepetServisi
+@inject SiparisServisi SiparisServisi
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Sipariş Tamamla - BUTIK</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6 mb-8">
+    <!-- Breadcrumb Navigasyon -->
+    <MudBreadcrumbs Items="@breadcrumbItems" Separator="/" Class="mb-6" Style="font-family: 'Roboto', sans-serif;">
+        <ItemTemplate Context="item">
+            @if (item.Disabled)
+            {
+                <MudText Typo="Typo.body1" Style="color: #000000; font-weight: 500;">@item.Text</MudText>
+            }
+            else
+            {
+                <MudLink Href="@item.Href" Underline="Underline.Hover" Style="color: #666666;">@item.Text</MudLink>
+            }
+        </ItemTemplate>
+    </MudBreadcrumbs>
+
+    <!-- Sayfa Başlığı -->
+    <MudText Typo="Typo.h3" Class="mb-6" Style="font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: -0.01em; color: #000000;">
+        Sipariş Tamamla
+    </MudText>
+
+    @if (sepetBos)
+    {
+        <!-- Boş Sepet Uyarısı -->
+        <MudPaper Elevation="0" Class="pa-8 text-center" Style="border: 1px solid #e0e0e0; border-radius: 12px; background: white; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+            <MudIcon Icon="@Icons.Material.Outlined.ShoppingCartCheckout" Size="Size.Large" Style="font-size: 80px; color: #cccccc;" Class="mb-4" />
+            <MudText Typo="Typo.h5" Class="mb-2" Style="font-family: 'Inter', sans-serif; font-weight: 600; color: #000000;">
+                Sepetiniz Boş
+            </MudText>
+            <MudText Typo="Typo.body1" Class="mb-4" Style="font-family: 'Roboto', sans-serif; color: #666666;">
+                Sipariş vermek için önce ürün eklemelisiniz.
+            </MudText>
+            <MudButton Variant="Variant.Filled" 
+                      Color="Color.Primary" 
+                      Size="Size.Large"
+                      OnClick="@(() => Navigation.NavigateTo("/urunler"))"
+                      Style="font-family: 'Roboto', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                Alışverişe Başla
+            </MudButton>
+        </MudPaper>
+    }
+    else
+    {
+        <!-- İki Sütunlu Düzen -->
+        <MudGrid>
+            <!-- Sol Sütun - Teslimat Bilgileri -->
+            <MudItem xs="12" md="8">
+                <MudCard Elevation="0" Style="border: 1px solid #e0e0e0; border-radius: 12px; background: white; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+                    <MudCardContent Class="pa-6">
+                        <!-- Başlık -->
+                        <MudText Typo="Typo.h5" Class="mb-4" Style="font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: -0.01em; color: #000000;">
+                            Teslimat Bilgileri
+                        </MudText>
+                        
+                        <MudDivider Class="mb-4" />
+                        
+                        <!-- Form -->
+                        <MudGrid Spacing="3">
+                            <!-- Ad Soyad -->
+                            <MudItem xs="12">
+                                <MudTextField @bind-Value="adSoyad" 
+                                            Label="Ad Soyad" 
+                                            Variant="Variant.Outlined" 
+                                            FullWidth="true"
+                                            Required="true"
+                                            Style="font-family: 'Roboto', sans-serif; border-radius: 8px;" />
+                            </MudItem>
+                            
+                            <!-- Telefon -->
+                            <MudItem xs="12" sm="6">
+                                <MudTextField @bind-Value="telefon" 
+                                            Label="Telefon" 
+                                            Variant="Variant.Outlined" 
+                                            FullWidth="true"
+                                            Required="true"
+                                            Style="font-family: 'Roboto', sans-serif; border-radius: 8px;" />
+                            </MudItem>
+                            
+                            <!-- E-posta -->
+                            <MudItem xs="12" sm="6">
+                                <MudTextField @bind-Value="eposta" 
+                                            Label="E-posta" 
+                                            Variant="Variant.Outlined" 
+                                            FullWidth="true"
+                                            InputType="InputType.Email"
+                                            Required="true"
+                                            Style="font-family: 'Roboto', sans-serif; border-radius: 8px;" />
+                            </MudItem>
+                            
+                            <!-- Adres -->
+                            <MudItem xs="12">
+                                <MudTextField @bind-Value="adres" 
+                                            Label="Adres" 
+                                            Variant="Variant.Outlined" 
+                                            FullWidth="true"
+                                            Lines="3"
+                                            Required="true"
+                                            Style="font-family: 'Roboto', sans-serif; border-radius: 8px;" />
+                            </MudItem>
+                            
+                            <!-- Şehir -->
+                            <MudItem xs="12" sm="6">
+                                <MudTextField @bind-Value="sehir" 
+                                            Label="Şehir" 
+                                            Variant="Variant.Outlined" 
+                                            FullWidth="true"
+                                            Required="true"
+                                            Style="font-family: 'Roboto', sans-serif; border-radius: 8px;" />
+                            </MudItem>
+                            
+                            <!-- Posta Kodu -->
+                            <MudItem xs="12" sm="6">
+                                <MudTextField @bind-Value="postaKodu" 
+                                            Label="Posta Kodu" 
+                                            Variant="Variant.Outlined" 
+                                            FullWidth="true"
+                                            Required="true"
+                                            Style="font-family: 'Roboto', sans-serif; border-radius: 8px;" />
+                            </MudItem>
+                            
+                            <!-- Sipariş Notu (Opsiyonel) -->
+                            <MudItem xs="12">
+                                <MudTextField @bind-Value="siparisNotu" 
+                                            Label="Sipariş Notu (Opsiyonel)" 
+                                            Variant="Variant.Outlined" 
+                                            FullWidth="true"
+                                            Lines="2"
+                                            Style="font-family: 'Roboto', sans-serif; border-radius: 8px;" />
+                            </MudItem>
+                        </MudGrid>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+            
+            <!-- Sağ Sütun - Sipariş Özeti -->
+            <MudItem xs="12" md="4">
+                <MudCard Elevation="0" Style="border: 1px solid #e0e0e0; border-radius: 12px; background: white; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); position: sticky; top: 80px;">
+                    <MudCardContent Class="pa-6">
+                        <!-- Başlık -->
+                        <MudText Typo="Typo.h5" Class="mb-4" Style="font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: -0.01em; color: #000000;">
+                            Sipariş Özeti
+                        </MudText>
+                        
+                        <MudDivider Class="mb-4" />
+                        
+                        <!-- Ürünler -->
+                        <MudText Typo="Typo.body2" Class="mb-3" Style="font-family: 'Roboto', sans-serif; color: #666666; text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px;">
+                            Ürünler
+                        </MudText>
+                        
+                        @foreach (var urun in sepetUrunleri)
+                        {
+                            <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween" Class="mb-2">
+                                <MudText Typo="Typo.body2" Style="font-family: 'Roboto', sans-serif; color: #666666;">
+                                    @urun.Ad x @urun.Adet
+                                </MudText>
+                                <MudText Typo="Typo.body2" Style="font-family: 'Roboto', sans-serif; font-weight: 500; color: #000000;">
+                                    @urun.ToplamFiyat.ToString("C", new System.Globalization.CultureInfo("tr-TR"))
+                                </MudText>
+                            </MudStack>
+                        }
+                        
+                        <MudDivider Class="my-4" />
+                        
+                        <!-- Ara Toplam -->
+                        <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween" Class="mb-3">
+                            <MudText Typo="Typo.body1" Style="font-family: 'Roboto', sans-serif; color: #666666;">
+                                Ara Toplam:
+                            </MudText>
+                            <MudText Typo="Typo.body1" Style="font-family: 'Roboto', sans-serif; font-weight: 500; color: #000000;">
+                                @toplamTutar.ToString("C", new System.Globalization.CultureInfo("tr-TR"))
+                            </MudText>
+                        </MudStack>
+                        
+                        <!-- Kargo -->
+                        <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween" Class="mb-3">
+                            <MudText Typo="Typo.body1" Style="font-family: 'Roboto', sans-serif; color: #666666;">
+                                Kargo:
+                            </MudText>
+                            <MudText Typo="Typo.body1" Style="font-family: 'Roboto', sans-serif; font-weight: 500; color: #00c853;">
+                                Ücretsiz
+                            </MudText>
+                        </MudStack>
+                        
+                        <MudDivider Class="my-4" />
+                        
+                        <!-- Toplam Tutar -->
+                        <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween" Class="mb-4">
+                            <MudText Typo="Typo.h6" Style="font-family: 'Inter', sans-serif; font-weight: 600; color: #000000;">
+                                Toplam:
+                            </MudText>
+                            <MudText Typo="Typo.h6" Style="font-family: 'Inter', sans-serif; font-weight: 600; color: #000000;">
+                                @toplamTutar.ToString("C", new System.Globalization.CultureInfo("tr-TR"))
+                            </MudText>
+                        </MudStack>
+                        
+                        <!-- Siparişi Onayla Butonu -->
+                        <MudButton Variant="Variant.Filled" 
+                                  Color="Color.Primary" 
+                                  Size="Size.Large" 
+                                  FullWidth="true"
+                                  StartIcon="@Icons.Material.Outlined.CheckCircle"
+                                  OnClick="@SiparisiOnayla"
+                                  Disabled="@yukleniyor"
+                                  Style="font-family: 'Roboto', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 8px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);">
+                            @if (yukleniyor)
+                            {
+                                <MudProgressCircular Size="Size.Small" Indeterminate="true" />
+                                <span class="ml-2">İşleniyor...</span>
+                            }
+                            else
+                            {
+                                <span>Siparişi Onayla</span>
+                            }
+                        </MudButton>
+                        
+                        <!-- Sepete Dön -->
+                        <MudButton Variant="Variant.Text" 
+                                  Color="Color.Inherit" 
+                                  FullWidth="true"
+                                  OnClick="@(() => Navigation.NavigateTo("/sepet"))"
+                                  Style="font-family: 'Roboto', sans-serif; font-weight: 400; text-transform: uppercase; letter-spacing: 0.05em; color: #666666;">
+                            Sepete Dön
+                        </MudButton>
+                        
+                        <!-- Güvenli Ödeme Bildirimi -->
+                        <MudAlert Severity="Severity.Info" 
+                                 Variant="Variant.Outlined" 
+                                 Icon="@Icons.Material.Outlined.Lock" 
+                                 Class="mt-4" 
+                                 Style="border-radius: 8px; border-color: #e0e0e0; background: #f8f9fa;">
+                            <MudText Typo="Typo.body2" Style="font-family: 'Roboto', sans-serif; color: #666666;">
+                                Tüm bilgileriniz güvenli bir şekilde saklanmaktadır.
+                            </MudText>
+                        </MudAlert>
+                    </MudCardContent>
+                </MudCard>
+            </MudItem>
+        </MudGrid>
+    }
+</MudContainer>
+
+@code {
+    private List<SepetUrunu> sepetUrunleri = new();
+    private List<BreadcrumbItem> breadcrumbItems = new();
+    private decimal toplamTutar = 0;
+    private bool sepetBos = false;
+    private bool yukleniyor = false;
+
+    // Form Alanları
+    private string adSoyad = string.Empty;
+    private string telefon = string.Empty;
+    private string eposta = string.Empty;
+    private string adres = string.Empty;
+    private string sehir = string.Empty;
+    private string postaKodu = string.Empty;
+    private string siparisNotu = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Breadcrumb'ları ayarla
+            breadcrumbItems = new List<BreadcrumbItem>
+            {
+                new BreadcrumbItem("Ana Sayfa", "/", disabled: false),
+                new BreadcrumbItem("Sepet", "/sepet", disabled: false),
+                new BreadcrumbItem("Sipariş Tamamla", null, disabled: true)
+            };
+            
+            // Sepet verilerini yükle
+            await SepetiYukle();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Sayfa yüklenirken hata oluştu: {ex.Message}");
+            Snackbar.Add("Sayfa yüklenirken bir hata oluştu!", Severity.Error);
+        }
+    }
+
+    private async Task SepetiYukle()
+    {
+        try
+        {
+            sepetUrunleri = await SepetServisi.SepetiGetir();
+            toplamTutar = await SepetServisi.ToplamTutar();
+            sepetBos = !sepetUrunleri.Any();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Sepet yükleme hatası: {ex.Message}");
+            sepetBos = true;
+        }
+    }
+
+    private async Task SiparisiOnayla()
+    {
+        try
+        {
+            // Form doğrulama
+            if (string.IsNullOrWhiteSpace(adSoyad) || 
+                string.IsNullOrWhiteSpace(telefon) || 
+                string.IsNullOrWhiteSpace(eposta) || 
+                string.IsNullOrWhiteSpace(adres) || 
+                string.IsNullOrWhiteSpace(sehir) || 
+                string.IsNullOrWhiteSpace(postaKodu))
+            {
+                Snackbar.Add("Lütfen tüm zorunlu alanları doldurun!", Severity.Warning);
+                return;
+            }
+
+            yukleniyor = true;
+            StateHasChanged();
+
+            // Sipariş DTO'sunu oluştur
+            var siparisDto = new SiparisOlusturDto
+            {
+                AdSoyad = adSoyad,
+                Telefon = telefon,
+                Eposta = eposta,
+                Adres = adres,
+                Sehir = sehir,
+                PostaKodu = postaKodu,
+                SiparisNotu = siparisNotu,
+                SepetUrunleri = sepetUrunleri.Select(su => new SepetUrunDto
+                {
+                    UrunId = su.UrunId,
+                    Ad = su.Ad,
+                    Fiyat = su.Fiyat,
+                    Adet = su.Adet
+                }).ToList()
+            };
+
+            Console.WriteLine("Sipariş API'ye gönderiliyor...");
+
+            // Siparişi API'ye gönder
+            var sonuc = await SiparisServisi.SiparisOlusturAsync(siparisDto);
+
+            if (sonuc != null)
+            {
+                Console.WriteLine($"Sipariş başarıyla oluşturuldu! ID: {sonuc.SiparisId}");
+                
+                // Sepeti temizle
+                await SepetServisi.SepetiTemizle();
+
+                // Başarı sayfasına yönlendir
+                Navigation.NavigateTo("/siparis-basarili");
+            }
+            else
+            {
+                Console.WriteLine("Sipariş oluşturulamadı - API'den null yanıt");
+                Snackbar.Add("Sipariş oluşturulurken bir hata oluştu! Lütfen tekrar deneyin.", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Sipariş onaylama hatası: {ex.Message}");
+            Snackbar.Add("Sipariş oluşturulurken bir hata oluştu!", Severity.Error);
+        }
+        finally
+        {
+            yukleniyor = false;
+            StateHasChanged();
+        }
+    }
+}
+
+<style>
+    /* Modern Sipariş Tamamla Stilleri */
+    .modern-checkout-card {
+        transition: all 0.3s ease;
+        border: 1px solid #e0e0e0;
+        border-radius: 12px;
+        background: white;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    }
+    
+    .modern-checkout-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        border-color: #667eea;
+    }
+    
+    .modern-form-field {
+        border-radius: 8px !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .modern-form-field .mud-input-root {
+        border-radius: 8px !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .modern-form-field .mud-input-root:focus-within {
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2) !important;
+    }
+    
+    .modern-button {
+        border-radius: 8px !important;
+        transition: all 0.3s ease !important;
+        font-weight: 500 !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.05em !important;
+    }
+    
+    .modern-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4) !important;
+    }
+    
+    .modern-alert {
+        border-radius: 8px !important;
+        background: #f8f9fa !important;
+        border-color: #e0e0e0 !important;
+    }
+    
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .modern-checkout-card {
+            margin-bottom: 16px;
+        }
+        
+        .modern-form-field {
+            margin-bottom: 8px;
+        }
+    }
+</style>
+

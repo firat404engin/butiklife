@@ -1,0 +1,139 @@
+@page "/admin/urunler"
+@attribute [Authorize(Roles = "Admin")]
+@inject UrunServisi UrunServisi
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+@* Dialog tabanlı akış kaldırıldı *@
+
+<PageTitle>Ürün Yönetimi - BUTIK Admin</PageTitle>
+
+<MudPaper Outlined="false" Elevation="0" Class="pa-4">
+    <!-- Toolbar: Başlık ve Yeni Ürün Butonu -->
+    <MudToolBar Dense="false" Class="mb-4" Style="background: transparent; padding: 0;">
+        <MudText Typo="Typo.h4" Style="font-family: 'Inter', sans-serif; font-weight: 700; color: #2c3e50;">
+            Ürün Yönetimi
+        </MudText>
+        <MudSpacer />
+        <MudButton Variant="Variant.Filled" 
+                  Color="Color.Primary" Size="Size.Medium"
+                  StartIcon="@Icons.Material.Filled.Add"
+                  Href="/admin/urunler/yeni"
+                  Style="font-family: 'Roboto', sans-serif; font-weight: 500;">
+            Yeni Ürün Ekle
+        </MudButton>
+    </MudToolBar>
+
+    @if (urunler == null)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+        <MudText Class="mt-4">Ürünler yükleniyor...</MudText>
+    }
+    else if (!urunler.Any())
+    {
+        <MudAlert Severity="Severity.Info">Henüz hiç ürün bulunmuyor.</MudAlert>
+    }
+    else
+    {
+        <MudPaper Outlined="true" Style="overflow-x: auto;">
+            <MudTable Items="@urunler" 
+                     Hover="true" 
+                     Dense="true" 
+                     Outlined="true"
+                     Striped="false" 
+                     Elevation="0"
+                     Style="font-family: 'Roboto', sans-serif;">
+                    <HeaderContent>
+                        <MudTh Style="font-weight: 600; color: #34495e;">ID</MudTh>
+                        <MudTh Style="font-weight: 600; color: #34495e;">Görsel</MudTh>
+                        <MudTh Style="font-weight: 600; color: #34495e;">Ürün Adı</MudTh>
+                        <MudTh Style="font-weight: 600; color: #34495e;">Fiyat</MudTh>
+                        <MudTh Style="font-weight: 600; color: #34495e;">Stok</MudTh>
+                        <MudTh Style="font-weight: 600; color: #34495e;">Kategori</MudTh>
+                    </HeaderContent>
+                    <RowTemplate>
+                        <MudTd DataLabel="ID">
+                            <MudText Typo="Typo.body2" Style="color: #7f8c8d;">@context.Id</MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Görsel">
+                            @if (!string.IsNullOrEmpty(context.GorselUrl))
+                            {
+                                <img src="@context.GorselUrl" 
+                                     alt="@context.Ad" 
+                                     style="height: 60px; width: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #e0e0e0;" />
+                            }
+                            else
+                            {
+                                <div style="height: 60px; width: 80px; background: #f5f5f5; display: flex; align-items: center; justify-content: center; border-radius: 4px; border: 1px solid #e0e0e0;">
+                                    <MudIcon Icon="@Icons.Material.Outlined.Image" Size="Size.Medium" Style="color: #ccc;" />
+                                </div>
+                            }
+                        </MudTd>
+                        <MudTd DataLabel="Ürün Adı">
+                            <MudText Typo="Typo.body1" Style="font-weight: 500; color: #2c3e50;">
+                                @context.Ad
+                            </MudText>
+                            <MudText Typo="Typo.caption" Style="color: #95a5a6;">
+                                @(context.Aciklama?.Length > 50 ? context.Aciklama.Substring(0, 50) + "..." : context.Aciklama)
+                            </MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Fiyat">
+                            <MudText Typo="Typo.body1" Style="font-weight: 600; color: #27ae60;">
+                                @context.Fiyat.ToString("C", new System.Globalization.CultureInfo("tr-TR"))
+                            </MudText>
+                        </MudTd>
+                        <MudTd DataLabel="Stok">
+                            <MudChip T="string"
+                                    Color="@(context.StokAdedi > 10 ? Color.Success : context.StokAdedi > 0 ? Color.Warning : Color.Error)" 
+                                    Size="Size.Small"
+                                    Style="font-weight: 500;">
+                                @context.StokAdedi adet
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Kategori">
+                            <MudChip T="string"
+                                    Color="Color.Info" 
+                                    Size="Size.Small"
+                                    Variant="Variant.Outlined">
+                                @context.Kategori?.Ad
+                            </MudChip>
+                        </MudTd>
+                        <MudTd DataLabel="Eylemler">
+                            <MudIconButton Icon="@Icons.Material.Filled.Edit"
+                                          Color="Color.Primary"
+                                          Size="Size.Small"
+                                          OnClick="@(() => Navigation.NavigateTo($"/admin/urunler/duzenle/{context.Id}"))" />
+                        </MudTd>
+                    </RowTemplate>
+                    <PagerContent>
+                        <MudTablePager PageSizeOptions="new int[] { 10, 25, 50, 100 }" 
+                                      InfoFormat="@("{first_item}-{last_item} / {all_items} ürün")" />
+                    </PagerContent>
+                </MudTable>
+        </MudPaper>
+    }
+</MudPaper>
+
+@code {
+    private List<Urun>? urunler;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await UrunleriYukle();
+    }
+
+    private async Task UrunleriYukle()
+    {
+        try
+        {
+            urunler = await UrunServisi.TumUrunleriGetirAsync();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Ürünler yüklenirken hata: {ex.Message}");
+            Snackbar.Add("Ürünler yüklenirken bir hata oluştu!", Severity.Error);
+        }
+    }
+
+    // Diyalog kaldırıldı; ekleme/düzenleme artık sayfalarda yapılıyor
+}

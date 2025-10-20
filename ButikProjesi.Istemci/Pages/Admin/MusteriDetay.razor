@@ -1,0 +1,118 @@
+@page "/admin/musteri-detay/{KullaniciId}"
+@attribute [Authorize(Roles = "Admin")]
+@using MudBlazor
+@using ButikProjesi.Istemci.Servisler
+@inject MusteriYonetimiServisi MusteriYonetimiServisi
+@inject NavigationManager NavigationManager
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6 mb-8">
+    <MudStack Spacing="4">
+        <MudStack Direction="Direction.Row" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" 
+                          Color="Color.Primary" 
+                          OnClick="@(() => NavigationManager.NavigateTo("/admin/musteriler"))" />
+            <MudText Typo="Typo.h4">Müşteri Detayları</MudText>
+        </MudStack>
+
+        @if (_isLoading)
+        {
+            <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-16">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                <MudText Typo="Typo.h6" Class="mt-4">Siparişler yükleniyor...</MudText>
+            </MudStack>
+        }
+        else
+        {
+            <MudPaper Elevation="2" Class="pa-4 mb-4">
+                <MudStack Spacing="2">
+                    <MudText Typo="Typo.h6">Müşteri Bilgileri</MudText>
+                    <MudDivider />
+                    <MudStack Direction="Direction.Row" Spacing="4">
+                        <MudText><strong>Kullanıcı ID:</strong> @KullaniciId</MudText>
+                        <MudText><strong>Toplam Sipariş:</strong> @_siparisler.Count adet</MudText>
+                    </MudStack>
+                </MudStack>
+            </MudPaper>
+
+            @if (!_siparisler.Any())
+            {
+                <MudStack AlignItems="AlignItems.Center" Spacing="4" Class="py-16">
+                    <MudIcon Icon="@Icons.Material.Outlined.ShoppingCart" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Typo="Typo.h6" Color="Color.Secondary">Bu müşterinin henüz siparişi bulunmuyor</MudText>
+                </MudStack>
+            }
+            else
+            {
+                <MudPaper Elevation="2" Class="pa-4">
+                    <MudText Typo="Typo.h6" Class="mb-4">Sipariş Geçmişi</MudText>
+                    <MudTable Items="_siparisler" Hover="true" Striped="true" Dense="true">
+                        <HeaderContent>
+                            <MudTh>Sipariş ID</MudTh>
+                            <MudTh>Tarih</MudTh>
+                            <MudTh>Tutar</MudTh>
+                            <MudTh>Durum</MudTh>
+                            <MudTh>Adres</MudTh>
+                            <MudTh>Telefon</MudTh>
+                            <MudTh>Notlar</MudTh>
+                        </HeaderContent>
+                        <RowTemplate>
+                            <MudTd>#@context.Id</MudTd>
+                            <MudTd>@context.SiparisTarihi.ToString("dd.MM.yyyy HH:mm")</MudTd>
+                            <MudTd>₺@context.ToplamTutar.ToString("N2")</MudTd>
+                            <MudTd>
+                                <MudChip T="string" Color="@GetDurumColor(context.Durum)" Size="Size.Small">
+                                    @context.Durum
+                                </MudChip>
+                            </MudTd>
+                            <MudTd>@context.Adres</MudTd>
+                            <MudTd>@context.Telefon</MudTd>
+                            <MudTd>@(context.Notlar ?? "-")</MudTd>
+                        </RowTemplate>
+                    </MudTable>
+                </MudPaper>
+            }
+        }
+    </MudStack>
+</MudContainer>
+
+@code {
+    [Parameter] public string KullaniciId { get; set; } = string.Empty;
+    
+    private List<SiparisDto> _siparisler = new();
+    private bool _isLoading = true;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SiparisleriYukle();
+    }
+
+    private async Task SiparisleriYukle()
+    {
+        _isLoading = true;
+        try
+        {
+            _siparisler = await MusteriYonetimiServisi.MusterininSiparisleriniGetirAsync(KullaniciId);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Müşteri siparişleri yüklenirken hata: {ex.Message}");
+        }
+        finally
+        {
+            _isLoading = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private Color GetDurumColor(string durum)
+    {
+        return durum.ToLower() switch
+        {
+            "tamamlandı" => Color.Success,
+            "hazırlanıyor" => Color.Warning,
+            "kargoda" => Color.Info,
+            "iptal" => Color.Error,
+            _ => Color.Default
+        };
+    }
+}

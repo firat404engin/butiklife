@@ -1,0 +1,120 @@
+﻿@inject NavigationManager NavigationManager
+@using Microsoft.AspNetCore.Components.Authorization
+
+@if (Mobile)
+{
+    <!-- Mobil Dikey Menü -->
+    <MudStack Spacing="2" Style="padding: 16px;">
+        <MudButton Href="/" 
+                  Variant="Variant.Text" 
+                  Color="@GetButtonColor("/")"
+                  FullWidth="true"
+                  Style="font-family: 'Roboto', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 0; padding: 12px 16px; justify-content: flex-start;">
+            Ana Sayfa
+        </MudButton>
+        <MudButton Href="/urunler" 
+                  Variant="Variant.Text" 
+                  Color="@GetButtonColor("/urunler")"
+                  FullWidth="true"
+                  Style="font-family: 'Roboto', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 0; padding: 12px 16px; justify-content: flex-start;">
+            Koleksiyon
+        </MudButton>
+        <MudButton Href="/hakkimizda" 
+                  Variant="Variant.Text" 
+                  Color="@GetButtonColor("/hakkimizda")"
+                  FullWidth="true"
+                  Style="font-family: 'Roboto', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 0; padding: 12px 16px; justify-content: flex-start;">
+            Hakkımızda
+        </MudButton>
+        <MudButton Href="/iletisim" 
+                  Variant="Variant.Text" 
+                  Color="@GetButtonColor("/iletisim")"
+                  FullWidth="true"
+                  Style="font-family: 'Roboto', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 0; padding: 12px 16px; justify-content: flex-start;">
+            İletişim
+        </MudButton>
+        
+        <!-- Admin Menüsü -->
+        <AuthorizeView Roles="Admin">
+            <MudDivider Class="my-2" />
+            <MudText Typo="Typo.caption" Class="px-3 py-2" Style="color: #666; font-weight: 600;">ADMIN</MudText>
+            <MudButton Href="/admin/kupon-yonetimi" 
+                      Variant="Variant.Text" 
+                      Color="@GetButtonColor("/admin/kupon-yonetimi")"
+                      FullWidth="true"
+                      StartIcon="@Icons.Material.Outlined.LocalOffer"
+                      Style="font-family: 'Roboto', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 0; padding: 12px 16px; justify-content: flex-start;">
+                Kupon Yönetimi
+            </MudButton>
+        </AuthorizeView>
+    </MudStack>
+}
+else
+{
+    <!-- Desktop Yatay Menü -->
+    <MudButton Href="/" 
+              Variant="Variant.Text" 
+              Color="@GetButtonColor("/")"
+              Style="font-family: 'Roboto', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 0; padding: 8px 16px;">
+        Ana Sayfa
+    </MudButton>
+
+    <MudButton Href="/urunler" 
+              Variant="Variant.Text" 
+              Color="@GetButtonColor("/urunler")"
+              Style="font-family: 'Roboto', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 0; padding: 8px 16px;">
+        Koleksiyon
+    </MudButton>
+
+
+    <MudButton Href="/hakkimizda" 
+              Variant="Variant.Text" 
+              Color="@GetButtonColor("/hakkimizda")"
+              Style="font-family: 'Roboto', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 0; padding: 8px 16px;">
+        Hakkımızda
+    </MudButton>
+
+    <MudButton Href="/iletisim" 
+              Variant="Variant.Text" 
+              Color="@GetButtonColor("/iletisim")"
+              Style="font-family: 'Roboto', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 0; padding: 8px 16px;">
+        İletişim
+    </MudButton>
+
+    <!-- Admin Menüsü -->
+    <AuthorizeView Roles="Admin">
+        <MudButton Href="/admin/kupon-yonetimi" 
+                  Variant="Variant.Text" 
+                  Color="@GetButtonColor("/admin/kupon-yonetimi")"
+                  StartIcon="@Icons.Material.Outlined.LocalOffer"
+                  Style="font-family: 'Roboto', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 0; padding: 8px 16px;">
+            Kupon Yönetimi
+        </MudButton>
+    </AuthorizeView>
+}
+
+@code {
+    [Parameter] public bool Mobile { get; set; } = false;
+    [Parameter] public EventCallback OnNavigate { get; set; }
+
+    private Color GetButtonColor(string path)
+    {
+        var currentPath = new Uri(NavigationManager.Uri).AbsolutePath;
+        
+        if (path == "/" && currentPath == "/")
+            return Color.Primary;
+        else if (path != "/" && currentPath.StartsWith(path))
+            return Color.Primary;
+        
+        return Color.Inherit;
+    }
+
+    private async Task NavigateTo(string path)
+    {
+        NavigationManager.NavigateTo(path);
+        if (OnNavigate.HasDelegate)
+        {
+            await OnNavigate.InvokeAsync();
+        }
+    }
+}

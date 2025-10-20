@@ -1,0 +1,579 @@
+﻿@page "/"
+
+<PageTitle>BUTIK - Stilin Sınırlarını Zorla</PageTitle>
+
+<!-- Modern Hero Section -->
+<div class="modern-hero">
+    <div class="hero-background"></div>
+    <div class="hero-overlay"></div>
+    
+    <div class="hero-content">
+        <MudContainer MaxWidth="MaxWidth.Large">
+            <MudStack AlignItems="AlignItems.Center" Spacing="6" Class="text-center">
+                       <!-- Ana Başlık -->
+                       <MudText Typo="Typo.h1" Class="hero-title">
+                           FG Collection: Sonbahar Şıklığı
+                       </MudText>
+                       
+                       <!-- Alt Başlık -->
+                       <MudText Typo="Typo.h5" Class="hero-subtitle">
+                           Avrupa sokaklarının zarafetini keşfedin
+                       </MudText>
+                
+                <!-- CTA Butonları -->
+                <MudStack Direction="Direction.Row" AlignItems="AlignItems.Center" Spacing="3" Justify="Justify.Center" Class="mt-4">
+                    <MudLink Href="/urunler" Underline="Underline.None">
+                        <MudButton Variant="Variant.Outlined" 
+                                  Color="Color.Inherit" 
+                                  Size="Size.Large" 
+                                  Style="border-width: 2px; color: white; border-color: white;">
+                            Koleksiyonu İncele
+                        </MudButton>
+                    </MudLink>
+                    
+                    <MudLink Href="/hakkimizda" Underline="Underline.None">
+                        <MudButton Variant="Variant.Text" 
+                                  Color="Color.Inherit" 
+                                  Size="Size.Large">
+                            Hakkımızda
+                        </MudButton>
+                    </MudLink>
+                </MudStack>
+            </MudStack>
+        </MudContainer>
+    </div>
+</div>
+
+<!-- Özellikler Bölümü -->
+<div class="features-section">
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge">
+        <MudStack Spacing="8">
+            <!-- Başlık -->
+            <MudText Typo="Typo.h3" Align="Align.Center" Class="features-title">
+                Neden BUTIK?
+            </MudText>
+            
+            <!-- Özellik Kartları -->
+            <MudGrid Spacing="4">
+                <MudItem xs="12" sm="6" md="4">
+                    <MudPaper Class="feature-card" Elevation="0">
+                        <MudStack AlignItems="AlignItems.Center" Spacing="3" Class="pa-6">
+                            <div class="feature-icon">
+                                <MudIcon Icon="@Icons.Material.Outlined.LocalShipping" Size="Size.Large" Color="Color.Primary" />
+                            </div>
+                            <MudText Typo="Typo.h6" Align="Align.Center" Class="feature-title">Ücretsiz Kargo</MudText>
+                            <MudText Typo="Typo.body2" Align="Align.Center" Class="feature-description">
+                                500₺ ve üzeri alışverişlerde ücretsiz kargo
+                            </MudText>
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+                
+                <MudItem xs="12" sm="6" md="4">
+                    <MudPaper Class="feature-card" Elevation="0">
+                        <MudStack AlignItems="AlignItems.Center" Spacing="3" Class="pa-6">
+                            <div class="feature-icon">
+                                <MudIcon Icon="@Icons.Material.Outlined.Refresh" Size="Size.Large" Color="Color.Primary" />
+                            </div>
+                            <MudText Typo="Typo.h6" Align="Align.Center" Class="feature-title">Kolay İade</MudText>
+                            <MudText Typo="Typo.body2" Align="Align.Center" Class="feature-description">
+                                30 gün içinde ücretsiz iade ve değişim
+                            </MudText>
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+                
+                <MudItem xs="12" sm="6" md="4">
+                    <MudPaper Class="feature-card" Elevation="0">
+                        <MudStack AlignItems="AlignItems.Center" Spacing="3" Class="pa-6">
+                            <div class="feature-icon">
+                                <MudIcon Icon="@Icons.Material.Outlined.Security" Size="Size.Large" Color="Color.Primary" />
+                            </div>
+                            <MudText Typo="Typo.h6" Align="Align.Center" Class="feature-title">Güvenli Ödeme</MudText>
+                            <MudText Typo="Typo.body2" Align="Align.Center" Class="feature-description">
+                                SSL sertifikası ile güvenli alışveriş
+                            </MudText>
+                        </MudStack>
+                    </MudPaper>
+                </MudItem>
+            </MudGrid>
+        </MudStack>
+    </MudContainer>
+</div>
+
+<!-- En Çok Satanlar Bölümü -->
+<div class="bestsellers-section">
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge">
+        <MudStack Spacing="6">
+            <MudText Typo="Typo.h3" Align="Align.Center" Class="section-title">
+                En Çok Satanlar
+            </MudText>
+            
+            @if (encokSatanUrunler.Any())
+            {
+                <MudGrid Spacing="4">
+                    @foreach (var urun in encokSatanUrunler)
+                    {
+                        <MudItem xs="12" sm="6" md="3">
+                            <MudLink Href="@($"/urun/{urun.Id}")" Underline="Underline.None" Class="product-card-link">
+                            <MudPaper Class="bestseller-card" Elevation="0">
+                                <div class="bestseller-image">
+                                    @if (!string.IsNullOrEmpty(urun.GorselUrl))
+                                    {
+                                        <img src="@urun.GorselUrl" alt="@urun.Ad" class="uniform-product-image" />
+                                    }
+                                    else
+                                    {
+                                        <div class="placeholder-image">
+                                            <MudIcon Icon="@Icons.Material.Outlined.Image" Size="Size.Large" />
+                                        </div>
+                                    }
+                                </div>
+                                <div class="bestseller-content">
+                                    <MudText Typo="Typo.h6" Class="bestseller-name">@urun.Ad</MudText>
+                                    <MudText Typo="Typo.body2" Class="bestseller-price">₺@urun.Fiyat.ToString("N0")</MudText>
+                                    @if (urun.EskiFiyat.HasValue && urun.EskiFiyat > urun.Fiyat)
+                                    {
+                                        <MudText Typo="Typo.caption" Class="bestseller-old-price">₺@urun.EskiFiyat.Value.ToString("N0")</MudText>
+                                    }
+                                </div>
+                            </MudPaper>
+                            </MudLink>
+                        </MudItem>
+                    }
+                </MudGrid>
+            }
+            else
+            {
+                <MudStack AlignItems="AlignItems.Center" Spacing="4" Class="pa-8">
+                    <MudIcon Icon="@Icons.Material.Outlined.ShoppingBag" Size="Size.Large" Color="Color.Secondary" />
+                    <MudText Typo="Typo.body1" Color="Color.Secondary">Henüz en çok satan ürün bulunmuyor</MudText>
+                </MudStack>
+            }
+            
+            <MudStack AlignItems="AlignItems.Center" Class="mt-4">
+                <MudLink Href="/urunler" Underline="Underline.None">
+                    <MudButton Variant="Variant.Outlined" 
+                              Color="Color.Primary" 
+                              Size="Size.Large"
+                              Style="border-radius: 25px; padding: 12px 32px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; border-color: #2c3e50; color: #2c3e50;">
+                        Tüm Ürünleri Gör
+                    </MudButton>
+                </MudLink>
+            </MudStack>
+        </MudStack>
+    </MudContainer>
+</div>
+
+<!-- Kategorileri Keşfet Bölümü -->
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-16 mb-16">
+    <MudText Typo="Typo.h4" Align="Align.Center" GutterBottom="true">Kategorileri Keşfet</MudText>
+    <MudGrid Spacing="4" Class="mt-8">
+        @foreach (var kategori in kategorilerListesi)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Class="position-relative rounded-lg overflow-hidden category-card" Style="height: 300px;">
+                    <MudLink Href="@($"/urunler?kategori={kategori.Ad}")">
+                        <img src="@kategori.GorselUrl" style="width: 100%; height: 100%; object-fit: cover;" alt="@kategori.Ad" />
+                        <div class="position-absolute d-flex justify-center align-center category-overlay" style="top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.4);">
+                            <MudText Typo="Typo.h5" Class="category-text" Style="color: white; font-weight: bold;">@kategori.Ad</MudText>
+                        </div>
+                    </MudLink>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+</MudContainer>
+
+<style>
+    .modern-hero {
+        position: relative;
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        overflow: hidden;
+    }
+
+    .hero-background {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        background-image: url('https://images.unsplash.com/photo-1469334031218-e382a71b716b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80');
+        background-size: cover;
+        background-position: center;
+        background-attachment: fixed;
+        z-index: 1;
+    }
+
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, rgba(0, 0, 0, 0.3) 0%, rgba(0, 0, 0, 0.1) 100%);
+        z-index: 2;
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 3;
+        width: 100%;
+        padding: 80px 0;
+    }
+
+    .hero-title {
+        color: white !important;
+        font-family: 'Montserrat', sans-serif !important;
+        font-weight: 700 !important;
+        font-size: 4rem !important;
+        line-height: 1.1 !important;
+        letter-spacing: -0.02em !important;
+        text-shadow: 0 4px 20px rgba(0, 0, 0, 0.5) !important;
+        margin-bottom: 1rem !important;
+    }
+
+    .hero-subtitle {
+        color: rgba(255, 255, 255, 0.95) !important;
+        font-family: 'Montserrat', sans-serif !important;
+        font-weight: 300 !important;
+        font-size: 1.4rem !important;
+        line-height: 1.4 !important;
+        letter-spacing: 0.02em !important;
+        text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3) !important;
+        margin-bottom: 2rem !important;
+    }
+
+    .hero-btn-primary:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4) !important;
+    }
+
+    .hero-btn-secondary:hover {
+        background: rgba(255, 255, 255, 0.1) !important;
+        transform: translateY(-2px) !important;
+    }
+
+    /* CTA modern stiller */
+    .cta-primary {
+        background: linear-gradient(135deg, #111827 0%, #1f2937 60%, #111827 100%) !important;
+        color: #ffffff !important;
+        border: none !important;
+        border-radius: 999px !important;
+        padding: 14px 32px !important;
+        font-weight: 700 !important;
+        letter-spacing: 0.6px !important;
+        text-transform: none !important;
+        box-shadow: 0 10px 30px rgba(17, 24, 39, 0.35) !important;
+        transition: transform .15s ease, box-shadow .2s ease !important;
+    }
+
+    .cta-primary:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 16px 40px rgba(17, 24, 39, 0.45) !important;
+    }
+
+    .cta-secondary {
+        color: #ffffff !important;
+        border-color: rgba(255,255,255,0.85) !important;
+        border-width: 2px !important;
+        border-radius: 999px !important;
+        padding: 14px 28px !important;
+        backdrop-filter: blur(10px) !important;
+        text-transform: none !important;
+        font-weight: 600 !important;
+        transition: background .2s ease, transform .15s ease !important;
+    }
+
+    .cta-secondary:hover {
+        background: rgba(255,255,255,0.12) !important;
+        transform: translateY(-2px) !important;
+    }
+
+    .features-section {
+        padding: 80px 0;
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    }
+
+    .features-title {
+        color: #2c3e50 !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 600 !important;
+        font-size: 2.5rem !important;
+        margin-bottom: 3rem !important;
+    }
+
+    .feature-card {
+        background: white !important;
+        border-radius: 16px !important;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08) !important;
+        transition: all 0.3s ease !important;
+        border: 1px solid rgba(0, 0, 0, 0.05) !important;
+    }
+
+    .feature-card:hover {
+        transform: translateY(-8px) !important;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15) !important;
+    }
+
+    .feature-icon {
+        width: 80px;
+        height: 80px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 1rem;
+    }
+
+    .feature-icon .mud-icon-root {
+        color: white !important;
+        font-size: 2rem !important;
+    }
+
+    .feature-title {
+        color: #2c3e50 !important;
+        font-family: 'Inter', sans-serif !important;
+        font-weight: 600 !important;
+        font-size: 1.25rem !important;
+        margin-bottom: 0.5rem !important;
+    }
+
+    .feature-description {
+        color: #6c757d !important;
+        font-family: 'Roboto', sans-serif !important;
+        font-weight: 400 !important;
+        line-height: 1.6 !important;
+    }
+
+    .bestsellers-section {
+        padding: 100px 0;
+        background: #fafafa;
+    }
+
+    .section-title {
+        color: #2c3e50 !important;
+        font-family: 'Montserrat', sans-serif !important;
+        font-weight: 600 !important;
+        font-size: 2.8rem !important;
+        margin-bottom: 4rem !important;
+        letter-spacing: -0.01em !important;
+    }
+
+    .bestseller-card {
+        background: white !important;
+        border-radius: 8px !important;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08) !important;
+        transition: all 0.3s ease !important;
+        border: 1px solid #f0f0f0 !important;
+        overflow: hidden !important;
+    }
+
+    .bestseller-card:hover {
+        transform: translateY(-4px) !important;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12) !important;
+    }
+
+    .bestseller-image {
+        position: relative;
+        height: 300px;
+        overflow: hidden;
+        background: #f8f8f8;
+    }
+
+    .bestseller-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.4s ease;
+    }
+
+    .bestseller-card:hover .bestseller-image img {
+        transform: scale(1.02);
+    }
+
+    .bestseller-content {
+        padding: 24px;
+        text-align: center;
+    }
+
+    .bestseller-name {
+        color: #2c3e50 !important;
+        font-family: 'Montserrat', sans-serif !important;
+        font-weight: 500 !important;
+        font-size: 1.1rem !important;
+        margin-bottom: 8px !important;
+        letter-spacing: 0.01em !important;
+    }
+
+    .bestseller-price {
+        color: #2c3e50 !important;
+        font-family: 'Montserrat', sans-serif !important;
+        font-weight: 600 !important;
+        font-size: 1.3rem !important;
+    }
+
+    .bestseller-old-price {
+        color: #999 !important;
+        font-family: 'Montserrat', sans-serif !important;
+        text-decoration: line-through !important;
+        font-size: 1rem !important;
+        margin-top: 4px !important;
+    }
+
+    .placeholder-image {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f8f8f8;
+        color: #ccc;
+    }
+
+    .testimonials-section {
+        padding: 100px 0;
+        background: #f8f8f8;
+    }
+
+    .testimonial-card {
+        background: white !important;
+        border-radius: 8px !important;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06) !important;
+        transition: all 0.3s ease !important;
+        border: 1px solid #f0f0f0 !important;
+    }
+
+    .testimonial-card:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08) !important;
+    }
+
+    .testimonial-rating {
+        margin-bottom: 12px;
+    }
+
+    .testimonial-text {
+        color: #2c3e50 !important;
+        font-family: 'Montserrat', sans-serif !important;
+        font-style: italic !important;
+        line-height: 1.6 !important;
+        margin-bottom: 20px !important;
+        font-size: 1rem !important;
+    }
+
+    .testimonial-avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        overflow: hidden;
+        border: 2px solid #e0e0e0;
+    }
+
+    .testimonial-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .testimonial-name {
+        color: #2c3e50 !important;
+        font-family: 'Montserrat', sans-serif !important;
+        font-weight: 600 !important;
+        margin-bottom: 4px !important;
+    }
+
+    .testimonial-title {
+        color: #666 !important;
+        font-family: 'Montserrat', sans-serif !important;
+        font-size: 0.9rem !important;
+    }
+
+    @@media (max-width: 768px) {
+        .hero-title {
+            font-size: 2.8rem !important;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.2rem !important;
+        }
+        
+        .features-title, .section-title {
+            font-size: 2.2rem !important;
+        }
+        
+        .bestseller-image {
+            height: 250px;
+        }
+        
+        .bestsellers-section {
+            padding: 60px 0;
+        }
+        
+        .testimonials-section {
+            padding: 60px 0;
+        }
+    }
+
+    /* Kategori kartları için hover efektleri */
+    .category-card {
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+
+    .category-card:hover {
+        transform: scale(1.05);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    }
+
+    .category-overlay {
+        transition: all 0.3s ease;
+    }
+
+    .category-card:hover .category-overlay {
+        background-color: rgba(0, 0, 0, 0.6) !important;
+    }
+
+    .category-text {
+        transition: all 0.3s ease;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        font-size: 1.5rem !important;
+        letter-spacing: 0.5px;
+    }
+
+    .category-card:hover .category-text {
+        transform: scale(1.1);
+        text-shadow: 3px 3px 6px rgba(0, 0, 0, 1);
+        font-size: 1.6rem !important;
+    }
+</style>
+
+@inject UrunServisi UrunServisi
+
+@code {
+    private List<UrunDto> encokSatanUrunler = new List<UrunDto>();
+    private List<Kategori> kategorilerListesi = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await EnCokSatanUrunleriYukle();
+        kategorilerListesi = await UrunServisi.KategorileriGetirAsync();
+    }
+
+    private async Task EnCokSatanUrunleriYukle()
+    {
+        try
+        {
+            encokSatanUrunler = await UrunServisi.EnCokSatanUrunleriGetirAsync(4);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"En çok satan ürünler yüklenirken hata: {ex.Message}");
+            encokSatanUrunler = new List<UrunDto>();
+        }
+    }
+}

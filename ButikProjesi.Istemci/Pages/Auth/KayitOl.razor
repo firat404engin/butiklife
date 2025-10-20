@@ -1,0 +1,149 @@
+@page "/kayit-ol"
+@using ButikProjesi.Istemci.Modeller
+@using ButikProjesi.Istemci.Servisler
+@inject AuthServisi AuthServisi
+@inject NavigationManager Navigation
+@inject ISnackbar Snackbar
+
+<PageTitle>Kayıt Ol - BUTIK</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Small" Class="mt-8">
+    <MudPaper Elevation="0" Class="pa-8" Style="border: 1px solid #e0e0e0; border-radius: 0;">
+        <!-- Logo / Başlık -->
+        <div class="text-center mb-6">
+            <MudText Typo="Typo.h4" Style="font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: -0.01em; color: #000000;">
+                Hesap Oluştur
+            </MudText>
+            <MudText Typo="Typo.body2" Class="mt-2" Style="font-family: 'Roboto', sans-serif; color: #666666;">
+                Alışverişe başlamak için bir hesap oluşturun
+            </MudText>
+        </div>
+
+        <!-- Kayıt Formu -->
+        <EditForm Model="@model" OnValidSubmit="@HandleKayit">
+            <DataAnnotationsValidator />
+
+            <MudStack Spacing="4">
+                <!-- E-posta -->
+                <MudTextField @bind-Value="model.Email"
+                             Label="E-posta"
+                             Variant="Variant.Outlined"
+                             InputType="InputType.Email"
+                             HelperText="Geçerli bir e-posta adresi giriniz"
+                             Required="true"
+                             Style="font-family: 'Roboto', sans-serif; border-radius: 0;" />
+                <ValidationMessage For="@(() => model.Email)" />
+
+                <!-- Şifre -->
+                <MudTextField @bind-Value="model.Sifre"
+                             Label="Şifre"
+                             Variant="Variant.Outlined"
+                             InputType="@(sifreGoster ? InputType.Text : InputType.Password)"
+                             Adornment="Adornment.End"
+                             AdornmentIcon="@(sifreGoster ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                             OnAdornmentClick="@(() => sifreGoster = !sifreGoster)"
+                             HelperText="En az 6 karakter, büyük/küçük harf ve rakam içermelidir"
+                             Required="true"
+                             Style="font-family: 'Roboto', sans-serif; border-radius: 0;" />
+                <ValidationMessage For="@(() => model.Sifre)" />
+
+                <!-- Şifre Tekrar -->
+                <MudTextField @bind-Value="model.SifreTekrar"
+                             Label="Şifre Tekrar"
+                             Variant="Variant.Outlined"
+                             InputType="@(sifreTekrarGoster ? InputType.Text : InputType.Password)"
+                             Adornment="Adornment.End"
+                             AdornmentIcon="@(sifreTekrarGoster ? Icons.Material.Filled.Visibility : Icons.Material.Filled.VisibilityOff)"
+                             OnAdornmentClick="@(() => sifreTekrarGoster = !sifreTekrarGoster)"
+                             HelperText="Şifrenizi tekrar giriniz"
+                             Required="true"
+                             Style="font-family: 'Roboto', sans-serif; border-radius: 0;" />
+                <ValidationMessage For="@(() => model.SifreTekrar)" />
+
+                <!-- Kayıt Ol Butonu -->
+                <MudButton Variant="Variant.Filled"
+                          Color="Color.Primary"
+                          Size="Size.Large"
+                          FullWidth="true"
+                          ButtonType="ButtonType.Submit"
+                          Disabled="@yukleniyor"
+                          StartIcon="@Icons.Material.Outlined.PersonAdd"
+                          Style="font-family: 'Roboto', sans-serif; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 0; background: #000000; color: white; margin-top: 16px;">
+                    @if (yukleniyor)
+                    {
+                        <MudProgressCircular Size="Size.Small" Indeterminate="true" Class="mr-2" />
+                        <span>Kayıt Oluşturuluyor...</span>
+                    }
+                    else
+                    {
+                        <span>Kayıt Ol</span>
+                    }
+                </MudButton>
+            </MudStack>
+        </EditForm>
+
+        <!-- Giriş Yap Linki -->
+        <MudDivider Class="my-6" />
+        <div class="text-center">
+            <MudText Typo="Typo.body2" Style="font-family: 'Roboto', sans-serif; color: #666666;">
+                Zaten hesabınız var mı?
+                <MudLink Href="/giris-yap" Underline="Underline.Always" Style="color: #000000; font-weight: 500;">
+                    Giriş Yapın
+                </MudLink>
+            </MudText>
+        </div>
+    </MudPaper>
+</MudContainer>
+
+@code {
+    private KayitDto model = new();
+    private bool yukleniyor = false;
+    private bool sifreGoster = false;
+    private bool sifreTekrarGoster = false;
+
+    private async Task HandleKayit()
+    {
+        try
+        {
+            yukleniyor = true;
+            StateHasChanged();
+
+            Console.WriteLine($"Kayıt formu gönderiliyor: {model.Email}");
+
+            var sonuc = await AuthServisi.KayitOlAsync(model);
+
+            if (sonuc != null && sonuc.Basarili)
+            {
+                Console.WriteLine($"Kayıt başarılı! Email: {sonuc.Email}, ID: {sonuc.KullaniciId}");
+                
+                Snackbar.Add(sonuc.Mesaj, Severity.Success);
+                
+                // Kısa bir gecikme sonrası ana sayfaya yönlendir
+                // AuthServisi zaten NotifyUserAuthentication() çağırdı
+                await Task.Delay(500);
+                
+                Console.WriteLine("Ana sayfaya yönlendiriliyor...");
+                Navigation.NavigateTo("/");
+            }
+            else
+            {
+                var hataMetni = sonuc?.Hatalar.Any() == true
+                    ? string.Join(", ", sonuc.Hatalar)
+                    : sonuc?.Mesaj ?? "Kayıt işlemi başarısız oldu";
+
+                Snackbar.Add(hataMetni, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Kayıt hatası: {ex.Message}");
+            Snackbar.Add("Kayıt işlemi sırasında bir hata oluştu!", Severity.Error);
+        }
+        finally
+        {
+            yukleniyor = false;
+            StateHasChanged();
+        }
+    }
+}
+

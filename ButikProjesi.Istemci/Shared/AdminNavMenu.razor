@@ -1,0 +1,85 @@
+@inject NavigationManager NavigationManager
+
+<MudNavMenu Class="modern-nav-menu">
+    <!-- Dashboard -->
+    <MudNavLink Href="/admin" 
+               Icon="@Icons.Material.Filled.Dashboard" 
+               Match="NavLinkMatch.All"
+               Class="modern-nav-link">
+        <MudStack Direction="Direction.Row" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.Dashboard" Style="font-size: 20px;" />
+            <MudText Typo="Typo.body1" Style="font-weight: 500;">Dashboard</MudText>
+        </MudStack>
+    </MudNavLink>
+    
+    <!-- Ürünler -->
+    <MudNavLink Href="/admin/urunler" 
+               Icon="@Icons.Material.Filled.Inventory" 
+               Match="NavLinkMatch.Prefix"
+               Class="modern-nav-link">
+        <MudStack Direction="Direction.Row" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.Inventory" Style="font-size: 20px;" />
+            <MudText Typo="Typo.body1" Style="font-weight: 500;">Ürünler</MudText>
+        </MudStack>
+    </MudNavLink>
+    
+    <!-- Kategoriler -->
+    <MudNavLink Href="/admin/kategoriler" 
+               Icon="@Icons.Material.Filled.Category" 
+               Match="NavLinkMatch.Prefix"
+               Class="modern-nav-link">
+        <MudStack Direction="Direction.Row" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.Category" Style="font-size: 20px;" />
+            <MudText Typo="Typo.body1" Style="font-weight: 500;">Kategoriler</MudText>
+        </MudStack>
+    </MudNavLink>
+    
+    <!-- Siparişler -->
+    <MudNavLink Href="/admin/siparisler" 
+               Icon="@Icons.Material.Filled.Receipt" 
+               Match="NavLinkMatch.Prefix"
+               Class="modern-nav-link">
+        <MudStack Direction="Direction.Row" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.Receipt" Style="font-size: 20px;" />
+            <MudText Typo="Typo.body1" Style="font-weight: 500;">Siparişler</MudText>
+        </MudStack>
+    </MudNavLink>
+    
+    <!-- Müşteriler -->
+    <MudNavLink Href="/admin/musteriler" 
+               Icon="@Icons.Material.Filled.People" 
+               Match="NavLinkMatch.Prefix"
+               Class="modern-nav-link">
+        <MudStack Direction="Direction.Row" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.People" Style="font-size: 20px;" />
+            <MudText Typo="Typo.body1" Style="font-weight: 500;">Müşteriler</MudText>
+        </MudStack>
+    </MudNavLink>
+    
+    <!-- Kupon Yönetimi -->
+    <MudNavLink Href="/admin/kupon-yonetimi" 
+               Icon="@Icons.Material.Filled.LocalOffer" 
+               Match="NavLinkMatch.Prefix"
+               Class="modern-nav-link">
+        <MudStack Direction="Direction.Row" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.LocalOffer" Style="font-size: 20px;" />
+            <MudText Typo="Typo.body1" Style="font-weight: 500;">Kupon Yönetimi</MudText>
+        </MudStack>
+    </MudNavLink>
+    
+    <!-- Yorum Yönetimi -->
+    <MudNavLink Href="/admin/yorumlar" 
+               Icon="@Icons.Material.Filled.Comment" 
+               Match="NavLinkMatch.Prefix"
+               Class="modern-nav-link">
+        <MudStack Direction="Direction.Row" AlignItems="AlignItems.Center" Spacing="2">
+            <MudIcon Icon="@Icons.Material.Filled.Comment" Style="font-size: 20px;" />
+            <MudText Typo="Typo.body1" Style="font-weight: 500;">Yorum Yönetimi</MudText>
+        </MudStack>
+    </MudNavLink>
+</MudNavMenu>
+
+@code {
+    // Navigasyon menüsü için gerekli kod
+}
+

@@ -1,0 +1,282 @@
+@page "/favorilerim"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using ButikProjesi.Shared.Modeller
+@using ButikProjesi.Istemci.Servisler
+@inject FavoriServisi FavoriServisi
+@inject SepetServisi SepetServisi
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Favorilerim - BUTIK</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6 mb-8">
+    <!-- Sayfa Başlığı -->
+    <MudText Typo="Typo.h3" GutterBottom="true" Class="mb-2" Style="font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: -0.01em; color: #000000;">
+        Favorilerim
+    </MudText>
+    
+    <MudText Typo="Typo.body1" Class="mb-6" Style="color: #666666;">
+        Beğendiğiniz ürünleri buradan takip edebilirsiniz
+    </MudText>
+
+    @if (favoriler == null)
+    {
+        <!-- Yükleniyor -->
+        <div class="d-flex justify-center align-center" style="min-height: 400px;">
+            <div class="text-center">
+                <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+                <MudText Typo="Typo.h6" Class="mt-4" Style="font-family: 'Roboto', sans-serif; color: #666666;">
+                    Favoriler yükleniyor...
+                </MudText>
+            </div>
+        </div>
+    }
+    else if (!favoriler.Any())
+    {
+        <!-- Favori Ürün Yok -->
+        <MudPaper Elevation="0" Class="pa-8 text-center" Style="border: 1px solid #e0e0e0; border-radius: 0;">
+            <MudIcon Icon="@Icons.Material.Outlined.FavoriteBorder" Size="Size.Large" Style="font-size: 80px; color: #cccccc;" Class="mb-4" />
+            <MudText Typo="Typo.h5" Class="mb-2" Style="font-family: 'Inter', sans-serif; font-weight: 600; color: #000000;">
+                Henüz Favori Ürün Yok
+            </MudText>
+            <MudText Typo="Typo.body1" Class="mb-4" Style="font-family: 'Roboto', sans-serif; color: #666666;">
+                Beğendiğiniz ürünleri favorilerinize ekleyerek kolayca takip edebilirsiniz.
+            </MudText>
+            <MudButton Variant="Variant.Filled" 
+                      Color="Color.Primary" 
+                      StartIcon="@Icons.Material.Filled.ShoppingBag"
+                      OnClick="@(() => Navigation.NavigateTo("/urunler"))"
+                      Style="text-transform: uppercase; letter-spacing: 0.05em;">
+                Alışverişe Başla
+            </MudButton>
+        </MudPaper>
+    }
+    else
+    {
+        <!-- İstatistik Kartı -->
+        <MudPaper Elevation="1" Class="pa-4 mb-6" Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 8px;">
+            <div class="d-flex align-center justify-space-between">
+                <div>
+                    <MudText Typo="Typo.h4" Style="color: white; font-weight: 700;">@favoriler.Count</MudText>
+                    <MudText Typo="Typo.body1" Style="color: rgba(255,255,255,0.9);">Favori Ürün</MudText>
+                </div>
+                <MudIcon Icon="@Icons.Material.Filled.Favorite" Size="Size.Large" Style="color: rgba(255,255,255,0.3); font-size: 60px;" />
+            </div>
+        </MudPaper>
+        
+        <!-- Profesyonel Grid Sistemi -->
+        <MudGrid Spacing="4">
+            @foreach (var urun in favoriler)
+            {
+                <MudItem xs="12" sm="6" md="4" lg="3">
+                    <div class="product-card">
+                        <!-- Ürün Görseli Konteyneri -->
+                        <div class="product-image-container" @onclick="@(() => Navigation.NavigateTo($"/urun/{urun.Id}"))">
+                            @if (!string.IsNullOrEmpty(urun.GorselUrl))
+                            {
+                                <img src="@urun.GorselUrl" 
+                                     alt="@urun.Ad" 
+                                     class="product-image" />
+                            }
+                            else
+                            {
+                                <div class="product-image-placeholder">
+                                    <MudIcon Icon="@Icons.Material.Outlined.Image" Size="Size.Large" Style="font-size: 60px; color: #cccccc;" />
+                                </div>
+                            }
+                            
+                            <!-- Favori Çıkar Butonu (Üstte Sağda) -->
+                            <div style="position: absolute; top: 12px; right: 12px; z-index: 10;" @onclick:stopPropagation="true">
+                                <MudIconButton Icon="@Icons.Material.Filled.Close" 
+                                              Color="Color.Default"
+                                              Size="Size.Small"
+                                              OnClick="@(() => FavorideCikar(urun.Id))"
+                                              Style="background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.15);" />
+                            </div>
+                        </div>
+                        
+                        <!-- Ürün Bilgileri (Kart Altı) -->
+                        <div class="product-info">
+                            <!-- Kategori -->
+                            @if (urun.Kategori != null)
+                            {
+                                <MudText Typo="Typo.caption" Class="product-category">
+                                    @urun.Kategori.Ad
+                                </MudText>
+                            }
+                            
+                            <!-- Ürün Adı -->
+                            <MudText Typo="Typo.body1" Class="product-name">
+                                @urun.Ad
+                            </MudText>
+                            
+                            <!-- Fiyat -->
+                            <MudText Typo="Typo.body1" Class="product-price">
+                                @urun.Fiyat.ToString("C", new System.Globalization.CultureInfo("tr-TR"))
+                            </MudText>
+                            
+                            <!-- Sepete Ekle Butonu -->
+                            <MudButton Variant="Variant.Outlined" 
+                                      Color="Color.Primary" 
+                                      Size="Size.Small"
+                                      StartIcon="@Icons.Material.Outlined.ShoppingCart"
+                                      FullWidth="true"
+                                      OnClick="@(() => SepeteEkle(urun))"
+                                      Class="mt-2"
+                                      Style="border-radius: 0;">
+                                Sepete Ekle
+                            </MudButton>
+                        </div>
+                    </div>
+                </MudItem>
+            }
+        </MudGrid>
+    }
+</MudContainer>
+
+<!-- Modern Kart Stilleri -->
+<style>
+    .product-card {
+        position: relative;
+        cursor: pointer;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid #e0e0e0;
+        background: white;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .product-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    }
+    
+    .product-image-container {
+        position: relative;
+        width: 100%;
+        height: 300px;
+        overflow: hidden;
+        background: #f8f8f8;
+    }
+    
+    .product-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.5s ease;
+    }
+    
+    .product-card:hover .product-image {
+        transform: scale(1.05);
+    }
+    
+    .product-image-placeholder {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f0f0f0;
+    }
+    
+    .product-info {
+        padding: 20px;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .product-category {
+        font-family: 'Roboto', sans-serif;
+        color: #999;
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+        font-size: 11px;
+        margin-bottom: 8px;
+        display: block;
+    }
+    
+    .product-name {
+        font-family: 'Inter', sans-serif;
+        font-weight: 500;
+        color: #000;
+        line-height: 1.4;
+        margin-bottom: 8px;
+        display: block;
+    }
+    
+    .product-price {
+        font-family: 'Roboto', sans-serif;
+        font-weight: 600;
+        color: #000;
+        font-size: 18px;
+        display: block;
+        margin-bottom: 12px;
+    }
+</style>
+
+@code {
+    private List<Urun>? favoriler;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await FavorileriYukle();
+    }
+
+    private async Task FavorileriYukle()
+    {
+        try
+        {
+            favoriler = await FavoriServisi.FavorileriGetirAsync();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Favoriler yüklenirken hata: {ex.Message}");
+            Snackbar.Add("Favoriler yüklenirken bir hata oluştu!", Severity.Error);
+            favoriler = new List<Urun>();
+        }
+    }
+
+    private async Task FavorideCikar(int urunId)
+    {
+        try
+        {
+            var (basarili, mesaj) = await FavoriServisi.FavoriSilAsync(urunId);
+            
+            if (basarili)
+            {
+                Snackbar.Add("Favorilerden çıkarıldı", Severity.Info);
+                await FavorileriYukle(); // Listeyi yenile
+            }
+            else
+            {
+                Snackbar.Add(mesaj, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Favori silinirken hata: {ex.Message}");
+            Snackbar.Add("Favori silinirken bir hata oluştu!", Severity.Error);
+        }
+    }
+
+    private async Task SepeteEkle(Urun urun)
+    {
+        try
+        {
+            await SepetServisi.SepeteEkle(urun, 1);
+            Snackbar.Add($"{urun.Ad} sepete eklendi!", Severity.Success);
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Ürün sepete eklenirken hata oluştu!", Severity.Error);
+            Console.WriteLine($"Sepete ekleme hatası: {ex.Message}");
+        }
+    }
+}
+
+
+

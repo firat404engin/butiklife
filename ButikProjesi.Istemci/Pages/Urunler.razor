@@ -1,0 +1,574 @@
+@page "/urunler"
+@using ButikProjesi.Shared.Modeller
+@using ButikProjesi.Istemci.Servisler
+@using Microsoft.AspNetCore.Components.Authorization
+@inject UrunServisi UrunServisi
+@inject FavoriServisi FavoriServisi
+@inject AuthenticationStateProvider AuthStateProvider
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+@implements IDisposable
+
+<PageTitle>Koleksiyon - BUTIK</PageTitle>
+
+@if (_isLoading)
+{
+    <MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6 mb-8">
+        <MudStack AlignItems="AlignItems.Center" Justify="Justify.Center" Class="py-16">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+            <MudText Typo="Typo.h6" Class="mt-4" Style="font-family: 'Inter', sans-serif; color: #666;">
+                Ürünler yükleniyor...
+            </MudText>
+        </MudStack>
+    </MudContainer>
+}
+else
+{
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-6 mb-8">
+    <!-- Sayfa Başlığı -->
+    <MudText Typo="Typo.h3" GutterBottom="true" Class="mb-2" Style="font-family: 'Inter', sans-serif; font-weight: 600; letter-spacing: -0.01em; color: #000000;">
+        Koleksiyon
+    </MudText>
+    
+    <!-- Breadcrumb Navigasyon -->
+    <MudBreadcrumbs Items="@breadcrumbItems" Separator="/" Class="mb-3" Style="font-family: 'Roboto', sans-serif;">
+        <ItemTemplate Context="item">
+            @if (item.Disabled)
+            {
+                <MudText Typo="Typo.body1" Style="color: #000000; font-weight: 500;">@item.Text</MudText>
+            }
+            else
+            {
+                <MudLink Href="@item.Href" Underline="Underline.Hover" Style="color: #666666;">@item.Text</MudLink>
+            }
+        </ItemTemplate>
+    </MudBreadcrumbs>
+
+    <!-- Ana İçerik Alanı -->
+    <MudGrid>
+        <!-- Sol Filtre Alanı -->
+        <MudItem xs="12" md="3">
+            <MudPaper Elevation="0" Class="pa-4" Style="border: 1px solid #e0e0e0; border-radius: 12px; background: white; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); position: sticky; top: 20px;">
+                <MudText Typo="Typo.h6" Class="mb-4" Style="font-family: 'Inter', sans-serif; font-weight: 600; color: #000000;">
+                    Filtreler
+                </MudText>
+                
+                <!-- Kategori Filtresi -->
+                <MudText Typo="Typo.subtitle1" Class="mb-2" Style="font-family: 'Roboto', sans-serif; font-weight: 500; color: #333;">
+                    Kategori
+                </MudText>
+                <MudSelect T="string" Value="seciliKategori"
+                          Variant="Variant.Outlined" 
+                          Style="margin-bottom: 16px; border-radius: 8px;"
+                          Class="modern-filter-select"
+                          ValueChanged="OnKategoriChanged">
+                    <MudSelectItem T="string" Value="@("")">Tüm Kategoriler</MudSelectItem>
+                    @foreach (var kategori in _kategoriler)
+                    {
+                        <MudSelectItem T="string" Value="@kategori.Ad">@kategori.Ad</MudSelectItem>
+                    }
+                </MudSelect>
+                
+                <!-- Fiyat Aralığı -->
+                <MudText Typo="Typo.subtitle1" Class="mb-2" Style="font-family: 'Roboto', sans-serif; font-weight: 500; color: #333;">
+                    Fiyat Aralığı
+                </MudText>
+                <MudStack Spacing="2" Class="mb-4">
+                    <MudTextField T="decimal" Value="minFiyat" 
+                                 Label="Min Fiyat" 
+                                 Variant="Variant.Outlined"
+                                 Style="border-radius: 8px;"
+                                 Class="modern-filter-input"
+                                 ValueChanged="OnMinFiyatChanged" />
+                    <MudTextField T="decimal" Value="maxFiyat" 
+                                 Label="Max Fiyat" 
+                                 Variant="Variant.Outlined"
+                                 Style="border-radius: 8px;"
+                                 Class="modern-filter-input"
+                                 ValueChanged="OnMaxFiyatChanged" />
+                </MudStack>
+                
+                <!-- Sıralama -->
+                <MudText Typo="Typo.subtitle1" Class="mb-2" Style="font-family: 'Roboto', sans-serif; font-weight: 500; color: #333;">
+                    Sıralama
+                </MudText>
+                <MudSelect T="string" Value="sirala"
+                          Variant="Variant.Outlined"
+                          Style="margin-bottom: 16px; border-radius: 8px;"
+                          Class="modern-filter-select"
+                          ValueChanged="OnSiralamaChanged">
+                    <MudSelectItem T="string" Value="@("encoksatan")">En Çok Satanlar</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("eniyipuan")">En İyi Puan</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("encokyorumlanan")">En Çok Yorumlanan</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("fiyatartan")">Fiyat (Artan)</MudSelectItem>
+                    <MudSelectItem T="string" Value="@("fiyatazalan")">Fiyat (Azalan)</MudSelectItem>
+                </MudSelect>
+                
+                <!-- Filtreleri Temizle -->
+                <MudButton Variant="Variant.Outlined" 
+                          Color="Color.Secondary" 
+                          FullWidth="true"
+                          OnClick="@FiltreleriTemizle"
+                          Style="border-radius: 8px; font-family: 'Roboto', sans-serif; font-weight: 500;">
+                    Filtreleri Temizle
+                </MudButton>
+            </MudPaper>
+        </MudItem>
+        
+        <!-- Sağ Ürün Alanı -->
+        <MudItem xs="12" md="9">
+            <!-- Ürün Sayısı -->
+            <MudText Typo="Typo.body1" Class="mb-4" Style="color: #666; font-weight: 500;">
+                @(_goruntulenenUrunler?.Count ?? 0) ürün bulundu
+            </MudText>
+            @if (_goruntulenenUrunler == null)
+    {
+        <!-- Yükleniyor -->
+        <MudStack AlignItems="AlignItems.Center" Class="mt-8">
+            <MudProgressCircular Color="Color.Primary" Indeterminate="true" Size="Size.Large" />
+            <MudText Typo="Typo.h6" Class="mt-4" Style="font-family: 'Roboto', sans-serif; color: #666666;">
+                Ürünler yükleniyor...
+            </MudText>
+        </MudStack>
+    }
+    else if (!_goruntulenenUrunler.Any())
+    {
+        <!-- Ürün Bulunamadı -->
+        <MudPaper Elevation="0" Class="pa-8 text-center" Style="border: 1px solid #e0e0e0;">
+            <MudIcon Icon="@Icons.Material.Outlined.SearchOff" Size="Size.Large" Style="font-size: 80px; color: #cccccc;" Class="mb-4" />
+            <MudText Typo="Typo.h5" Class="mb-2" Style="font-family: 'Inter', sans-serif; font-weight: 600; color: #000000;">
+                Ürün Bulunamadı
+            </MudText>
+            <MudText Typo="Typo.body1" Style="font-family: 'Roboto', sans-serif; color: #666666;">
+                Şu anda mağazamızda ürün bulunmamaktadır.
+            </MudText>
+        </MudPaper>
+    }
+    else
+    {
+                <MudGrid Spacing="3">
+                    @foreach (var urun in _goruntulenenUrunler)
+                    {
+                        <MudItem xs="12" sm="6" md="4" lg="3">
+                            <MudPaper Elevation="0" Class="modern-product-card" Style="height: 100%; border-radius: 12px; overflow: hidden; transition: all 0.3s ease; border: 1px solid #e0e0e0; background: white; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">
+                                <div class="product-image-container" style="position: relative; height: 320px; overflow: hidden;">
+                                    <MudLink Href="@($"/urun/{urun.Id}")" Class="product-link">
+                                        @if (!string.IsNullOrEmpty(urun.GorselUrl))
+                                        {
+                                            <img src="@urun.GorselUrl" alt="@urun.Ad" style="width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease;" />
+                                        }
+                                        else
+                                        {
+                                            <div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);">
+                                                <MudIcon Icon="@Icons.Material.Outlined.Image" Size="Size.Large" Style="font-size: 60px; color: #cbd5e1;" />
+                                            </div>
+                                        }
+                                        
+                                        <!-- İndirim Rozeti -->
+                                        @if (urun.EskiFiyat.HasValue && urun.EskiFiyat.Value > urun.Fiyat)
+                                        {
+                                            var indirimOrani = (int)Math.Round(((urun.EskiFiyat.Value - urun.Fiyat) / urun.EskiFiyat.Value) * 100);
+                                            <div class="discount-badge" style="position: absolute; top: 12px; left: 12px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);">
+                                                -%@indirimOrani
+                                            </div>
+                                        }
+                                    </MudLink>
+                                    
+                                    <!-- Favori Butonu -->
+                                    <MudIconButton Icon="@(favoriUrunIdler.Contains(urun.Id) ? Icons.Material.Filled.Favorite : Icons.Material.Filled.FavoriteBorder)"
+                                                   Color="@(favoriUrunIdler.Contains(urun.Id) ? Color.Error : Color.Inherit)"
+                                                   OnClick="@((e) => ToggleFavori(urun.Id))"
+                                                   Class="favorite-button"
+                                                   Style="position: absolute; top: 12px; right: 12px; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-radius: 50%; width: 40px; height: 40px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);" />
+                                </div>
+                                
+                                <div class="pa-4" style="height: 180px; display: flex; flex-direction: column; justify-content: space-between;">
+                                    <div>
+                                        <!-- Ürün Adı -->
+                                        <MudText Typo="Typo.h6" Class="font-weight-bold mb-2" Style="color: #1f2937; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; font-size: 16px;">
+                                            @urun.Ad
+                                        </MudText>
+                                        
+                                        <!-- Yıldız Puanı -->
+                                        @if (urun.YorumSayisi > 0)
+                                        {
+                                            <div class="d-flex align-center mb-3">
+                                                <MudRating ReadOnly="true" SelectedValue="@((int)Math.Round(urun.OrtalamaPuan))" MaxValue="5" Size="Size.Small" Color="Color.Warning" />
+                                                <MudText Typo="Typo.caption" Class="ml-2" Style="color: #6b7280; font-weight: 500; font-size: 12px;">
+                                                    (@urun.OrtalamaPuan.ToString("0.0")) (@urun.YorumSayisi)
+                                                </MudText>
+                                            </div>
+                                        }
+                                        
+                                        <!-- Fiyat Bilgileri -->
+                                        <div class="price-section">
+                                            @if (urun.EskiFiyat.HasValue && urun.EskiFiyat.Value > urun.Fiyat)
+                                            {
+                                                <div class="d-flex align-center mb-1">
+                                                    <MudText Typo="Typo.body2" Style="text-decoration: line-through; color: #9ca3af; margin-right: 8px; font-size: 13px;">
+                                                        @urun.EskiFiyat.Value.ToString("C", new System.Globalization.CultureInfo("tr-TR"))
+                                                    </MudText>
+                                                    <MudChip T="string" Color="Color.Success" Size="Size.Small" Style="font-size: 10px; height: 18px;">
+                                                        İndirimli
+                                                    </MudChip>
+                                                </div>
+                                            }
+                                            <MudText Typo="Typo.h6" Color="Color.Primary" Class="font-weight-bold" Style="font-size: 16px;">
+                                                @urun.Fiyat.ToString("C", new System.Globalization.CultureInfo("tr-TR"))
+                                            </MudText>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Alt Bilgiler -->
+                                    <div class="d-flex justify-space-between align-center mt-2">
+                                        <MudText Typo="Typo.caption" Style="color: #9ca3af; font-size: 11px;">
+                                            Stok: @urun.StokAdedi
+                                        </MudText>
+                                        <MudText Typo="Typo.caption" Style="color: #9ca3af; font-size: 11px;">
+                                            Kategori: @(urun.Kategori?.Ad ?? "Belirtilmemiş")
+                                        </MudText>
+                                    </div>
+                                </div>
+                            </MudPaper>
+                        </MudItem>
+                    }
+                </MudGrid>
+                
+                <!-- Sayfalama -->
+                @if (_totalPages > 1)
+                {
+                    <MudStack AlignItems="AlignItems.Center" Class="mt-6">
+                        <MudPagination Selected="@_currentPage" 
+                                       SelectedChanged="OnPageChanged"
+                                       Count="@_totalPages" 
+                                       Class="mt-4" 
+                                       Color="Color.Primary" 
+                                       Style="font-family: 'Roboto', sans-serif;" />
+                    </MudStack>
+                }
+            }
+        </MudItem>
+    </MudGrid>
+</MudContainer>
+}
+
+@code {
+    // URL'den kategori parametresi
+    [Parameter]
+    [SupplyParameterFromQuery]
+    public string? Kategori { get; set; }
+
+    // Veri listelerini boş olarak başlat
+    private List<UrunDto> _tumUrunler = new(); // Tüm ürünler
+    private List<UrunDto> _goruntulenenUrunler = new(); // Sayfada gösterilen ürünler
+    private List<Kategori> _kategoriler = new();
+    private List<BreadcrumbItem> breadcrumbItems = new();
+    private HashSet<int> favoriUrunIdler = new();
+    private bool kullaniciGirisYapti = false;
+    
+    // Yükleniyor durumu
+    private bool _isLoading = true;
+    
+    // Sayfalama değişkenleri
+    private int _currentPage = 1;
+    private int _pageSize = 12; // Her sayfada kaç ürün gösterileceği
+    private int _totalItems = 0; // Toplam ürün sayısı
+    private int _totalPages => (int)Math.Ceiling((double)_totalItems / _pageSize);
+    
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+    
+    private async Task LoadDataAsync()
+    {
+        _isLoading = true;
+        try
+        {
+            // Kullanıcı giriş durumunu kontrol et
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            kullaniciGirisYapti = authState.User.Identity?.IsAuthenticated ?? false;
+            
+            // Breadcrumb'ları ayarla
+            breadcrumbItems = new List<BreadcrumbItem>
+            {
+                new BreadcrumbItem("Ana Sayfa", "/", disabled: false),
+                new BreadcrumbItem("Koleksiyon", null, disabled: true)
+            };
+            
+            Console.WriteLine("API'den ürünler getiriliyor...");
+            
+            // API'den ürünleri ve kategorileri getir (filtrelerle birlikte)
+            var urunlerTask = UrunServisi.UrunleriGetirAsync(
+                kategori: !string.IsNullOrEmpty(seciliKategori) ? seciliKategori : null,
+                minFiyat: minFiyat > 0 ? minFiyat : null,
+                maxFiyat: maxFiyat < 100000 ? maxFiyat : null,
+                sirala: sirala
+            );
+            var kategorilerTask = UrunServisi.KategorileriGetirAsync();
+            
+            await Task.WhenAll(urunlerTask, kategorilerTask);
+            
+            _tumUrunler = await urunlerTask;
+            _kategoriler = await kategorilerTask ?? new List<Kategori>();
+            
+            // Kategori filtresi uygula
+            if (!string.IsNullOrEmpty(Kategori))
+            {
+                _tumUrunler = _tumUrunler.Where(u => u.Kategori?.Ad == Kategori).ToList();
+                Console.WriteLine($"Kategori filtresi uygulandı: {Kategori}");
+            }
+            
+            _totalItems = _tumUrunler.Count;
+            ApplyPagination(); // Sayfalamayı uygula
+            
+            Console.WriteLine($"Gelen ürün sayısı: {_tumUrunler.Count}");
+            Console.WriteLine($"Gelen kategori sayısı: {_kategoriler.Count}");
+            
+            // Kullanıcı giriş yaptıysa favori ürünlerini yükle
+            if (kullaniciGirisYapti)
+            {
+                await FavorileriYukle();
+            }
+        }
+        catch (Exception ex)
+        {
+            // Hata durumunda boş liste göster
+            _tumUrunler = new List<UrunDto>();
+            _kategoriler = new List<Kategori>();
+            Console.WriteLine($"Ürünler yüklenirken hata oluştu: {ex.Message}");
+            Snackbar.Add("Ürünler yüklenirken bir hata oluştu!", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+        }
+    }
+    
+    private void ApplyPagination()
+    {
+        _goruntulenenUrunler = _tumUrunler
+            .Skip((_currentPage - 1) * _pageSize)
+            .Take(_pageSize)
+            .ToList();
+        StateHasChanged(); // Arayüzü güncelle
+    }
+    
+    private void OnPageChanged(int newPage)
+    {
+        if (newPage >= 1 && newPage <= _totalPages)
+        {
+            _currentPage = newPage;
+            ApplyPagination(); // Yeni sayfayı uygula
+        }
+    }
+    
+    private async Task FavorileriYukle()
+    {
+        try
+        {
+            var favoriler = await FavoriServisi.FavorileriGetirAsync();
+            if (favoriler != null)
+            {
+                favoriUrunIdler = favoriler.Select(f => f.Id).ToHashSet();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Favoriler yüklenirken hata: {ex.Message}");
+        }
+    }
+
+    // Filtre state
+    private string? sirala = "encokyorumlanan";
+    private string? seciliKategori = "";
+    private decimal minFiyat = 0;
+    private decimal maxFiyat = 100000;
+
+
+
+    // Filtre değişiklik event handler'ları
+    private async Task OnKategoriChanged(string? yeniKategori)
+    {
+        seciliKategori = yeniKategori ?? "";
+        await FiltreleriUygula();
+    }
+
+    private async Task OnMinFiyatChanged(decimal yeniFiyat)
+    {
+        minFiyat = yeniFiyat;
+        await FiltreleriUygula();
+    }
+
+    private async Task OnMaxFiyatChanged(decimal yeniFiyat)
+    {
+        maxFiyat = yeniFiyat;
+        await FiltreleriUygula();
+    }
+
+    private async Task OnSiralamaChanged(string? yeniSiralama)
+    {
+        sirala = yeniSiralama ?? "encokyorumlanan";
+        await FiltreleriUygula();
+    }
+
+    private async Task FiltreleriUygula()
+    {
+        _isLoading = true;
+        StateHasChanged();
+        
+        try
+        {
+            // API'den filtrelenmiş ürünleri getir
+            _tumUrunler = await UrunServisi.UrunleriGetirAsync(
+                kategori: !string.IsNullOrEmpty(seciliKategori) ? seciliKategori : null,
+                minFiyat: minFiyat > 0 ? minFiyat : null,
+                maxFiyat: maxFiyat < 100000 ? maxFiyat : null,
+                sirala: sirala
+            );
+            
+            _totalItems = _tumUrunler.Count;
+            _currentPage = 1; // İlk sayfaya dön
+            ApplyPagination();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Filtreler uygulanırken hata: {ex.Message}");
+            Snackbar.Add("Filtreler uygulanırken bir hata oluştu!", Severity.Error);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task FiltreleriTemizle()
+    {
+        seciliKategori = "";
+        minFiyat = 0;
+        maxFiyat = 100000;
+        sirala = "encokyorumlanan";
+        await FiltreleriUygula();
+    }
+
+    public void Dispose()
+    {
+        // Timer artık kullanılmıyor
+    }
+
+    
+    private async Task ToggleFavori(int urunId)
+    {
+        try
+        {
+            // Kullanıcı giriş kontrolü
+            if (!kullaniciGirisYapti)
+            {
+                Snackbar.Add("Favorilere eklemek için giriş yapmalısınız!", Severity.Warning);
+                Navigation.NavigateTo("/giris-yap");
+                return;
+            }
+            
+            // Favori durumunu kontrol et
+            if (favoriUrunIdler.Contains(urunId))
+            {
+                // Favorilerden çıkar
+                var (basarili, mesaj) = await FavoriServisi.FavoriSilAsync(urunId);
+                if (basarili)
+                {
+                    favoriUrunIdler.Remove(urunId);
+                    Snackbar.Add("Favorilerden çıkarıldı", Severity.Info);
+                    StateHasChanged();
+                }
+                else
+                {
+                    Snackbar.Add(mesaj, Severity.Error);
+                }
+            }
+            else
+            {
+                // Favorilere ekle
+                var (basarili, mesaj) = await FavoriServisi.FavoriEkleAsync(urunId);
+                if (basarili)
+                {
+                    favoriUrunIdler.Add(urunId);
+                    Snackbar.Add("Favorilere eklendi!", Severity.Success);
+                    StateHasChanged();
+                }
+                else
+                {
+                    Snackbar.Add(mesaj, Severity.Error);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Favori işlemi hatası: {ex.Message}");
+            Snackbar.Add("İşlem sırasında bir hata oluştu!", Severity.Error);
+        }
+    }
+}
+
+<style>
+    /* Modern Filtre Stilleri */
+    .modern-filter-select .mud-input-root {
+        border-radius: 8px !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .modern-filter-select .mud-input-root:hover {
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1) !important;
+    }
+    
+    .modern-filter-select .mud-input-root:focus-within {
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2) !important;
+    }
+    
+    .modern-filter-input .mud-input-root {
+        border-radius: 8px !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .modern-filter-input .mud-input-root:hover {
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1) !important;
+    }
+    
+    .modern-filter-input .mud-input-root:focus-within {
+        border-color: #667eea !important;
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2) !important;
+    }
+    
+    /* Modern Ürün Kartları */
+    .modern-product-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15) !important;
+        border-color: #667eea !important;
+    }
+    
+    .modern-product-card .product-image-container:hover img {
+        transform: scale(1.05);
+    }
+    
+    .modern-product-card .favorite-button:hover {
+        background: rgba(244, 67, 54, 0.1) !important;
+        color: #f44336 !important;
+    }
+
+
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .modern-filter-select {
+            min-width: 120px !important;
+        }
+        
+        .modern-product-card {
+            margin-bottom: 16px;
+        }
+    }
+</style>
+

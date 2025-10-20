@@ -1,0 +1,85 @@
+@* Shared/Footer.razor *@
+<MudPaper Elevation="0" Square="true" Class="py-6 px-4 mt-8" Style="border-top: 1px solid #e0e0e0; background-color: #f9f9f9;">
+    <MudContainer MaxWidth="MaxWidth.Large">
+        
+        @* Sade Ödeme Yöntemleri *@
+        <div class="text-center mb-4">
+            <MudText Typo="Typo.body2" Style="color: #666; margin-bottom: 12px;">
+                Güvenli Ödeme Yöntemleri
+            </MudText>
+            
+            <div class="payment-methods-simple">
+                <span class="payment-item">Visa</span>
+                <span class="payment-item">Mastercard</span>
+                <span class="payment-item">American Express</span>
+                <span class="payment-item">PayPal</span>
+                <span class="payment-item">Apple Pay</span>
+                <span class="payment-item">Google Pay</span>
+            </div>
+        </div>
+
+        <MudDivider />
+
+        @* Telif Hakkı ve Yasal Linkler *@
+        <div class="d-flex justify-space-between align-center mt-4">
+            <MudText Typo="Typo.caption">© @DateTime.Now.Year - BUTİK Tüm hakları saklıdır.</MudText>
+            <MudStack Direction="Direction.Horizontal" Spacing="3">
+                <MudLink Href="/sartlar" Typo="Typo.caption" Color="Color.Inherit">Şartlar</MudLink>
+                <MudLink Href="/gizlilik" Typo="Typo.caption" Color="Color.Inherit">Gizlilik</MudLink>
+                <MudLink Href="/iade" Typo="Typo.caption" Color="Color.Inherit">İade ve Değişim</MudLink>
+            </MudStack>
+        </div>
+
+    </MudContainer>
+</MudPaper>
+
+<style>
+    /* Sade Ödeme Yöntemleri Stilleri */
+    .payment-methods-simple {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .payment-item {
+        color: #666;
+        font-size: 14px;
+        font-weight: 500;
+        padding: 4px 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: #f8f9fa;
+        transition: all 0.2s ease;
+    }
+
+    .payment-item:hover {
+        color: #333;
+        border-color: #999;
+        background: #f0f0f0;
+    }
+
+    /* Responsive Design */
+    @@media (max-width: 768px) {
+        .payment-methods-simple {
+            gap: 12px;
+        }
+        
+        .payment-item {
+            font-size: 12px;
+            padding: 3px 6px;
+        }
+    }
+
+    @@media (max-width: 480px) {
+        .payment-methods-simple {
+            gap: 8px;
+        }
+        
+        .payment-item {
+            font-size: 11px;
+            padding: 2px 4px;
+        }
+    }
+</style>

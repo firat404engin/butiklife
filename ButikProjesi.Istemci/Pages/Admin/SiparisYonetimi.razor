@@ -1,0 +1,234 @@
+@page "/admin/siparisler"
+@attribute [Authorize(Roles = "Admin")]
+@inject HttpClient HttpClient
+@inject ISnackbar Snackbar
+@inject NavigationManager Navigation
+
+<PageTitle>Sipariş Yönetimi - BUTIK Admin</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.ExtraLarge" Class="mt-4 mb-6">
+    <!-- Modern Header -->
+    <MudPaper Elevation="0" Class="pa-6 mb-6" Style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; color: white;">
+        <MudStack Direction="Direction.Row" Justify="Justify.SpaceBetween" AlignItems="AlignItems.Center">
+            <div>
+                <MudText Typo="Typo.h3" Style="font-family: 'Inter', sans-serif; font-weight: 700; margin-bottom: 8px;">
+                    Sipariş Yönetimi
+                </MudText>
+                <MudText Typo="Typo.body1" Style="opacity: 0.9;">
+                    Tüm siparişleri görüntüleyin ve yönetin
+                </MudText>
+            </div>
+            <MudButton Variant="Variant.Outlined" 
+                      Color="Color.Inherit" 
+                      StartIcon="@Icons.Material.Filled.ArrowBack"
+                      OnClick="@(() => Navigation.NavigateTo("/admin"))"
+                      Style="border-color: rgba(255,255,255,0.3); color: white;">
+                Geri Dön
+            </MudButton>
+        </MudStack>
+    </MudPaper>
+
+    @if (siparisler == null)
+    {
+        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+        <MudText Class="mt-4">Siparişler yükleniyor...</MudText>
+    }
+    else
+    {
+        <!-- Sipariş Tablosu -->
+        <MudPaper Outlined="true" Style="overflow-x: auto;">
+            <MudTable Items="@siparisler" Hover="true" Striped="true" Dense="true" FixedHeader="true" Height="600px">
+            <HeaderContent>
+                <MudTh>ID</MudTh>
+                <MudTh>Müşteri</MudTh>
+                <MudTh>Tarih</MudTh>
+                <MudTh>Toplam</MudTh>
+                <MudTh>Ürün Sayısı</MudTh>
+                <MudTh>Durum</MudTh>
+                <MudTh>Eylemler</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="ID">@context.Id</MudTd>
+                <MudTd DataLabel="Müşteri">@context.MusteriAdi</MudTd>
+                <MudTd DataLabel="Tarih">@context.SiparisTarihi.ToString("dd.MM.yyyy HH:mm")</MudTd>
+                <MudTd DataLabel="Toplam">@context.ToplamTutar.ToString("C0", new System.Globalization.CultureInfo("tr-TR"))</MudTd>
+                <MudTd DataLabel="Ürün Sayısı">
+                    <MudChip T="string" Color="Color.Info" Size="Size.Small">
+                        @context.SiparisKalemleri.Count adet
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Durum">
+                    <MudChip T="string" Color="@GetDurumRengi(context.Durum)" Size="Size.Small">
+                        @context.Durum
+                    </MudChip>
+                </MudTd>
+                <MudTd DataLabel="Eylemler">
+                    <MudStack Direction="Direction.Row" Spacing="1">
+                        <MudButton Variant="Variant.Outlined" 
+                                  Color="Color.Primary" 
+                                  Size="Size.Small"
+                                  StartIcon="@Icons.Material.Filled.Visibility"
+                                  OnClick="@(() => SiparisDetayiniGoruntule(context.Id))">
+                            Detay
+                        </MudButton>
+                        @if (context.Durum != "Tamamlandı" && context.Durum != "Teslim Edildi")
+                        {
+                            <MudButton Variant="Variant.Outlined" 
+                                      Color="Color.Success" 
+                                      Size="Size.Small"
+                                      StartIcon="@Icons.Material.Filled.Check"
+                                      OnClick="@(() => SiparisDurumunuGuncelle(context.Id, "Tamamlandı"))">
+                                Tamamla
+                            </MudButton>
+                        }
+                        @if (context.Durum == "Tamamlandı")
+                        {
+                            <MudButton Variant="Variant.Outlined" 
+                                      Color="Color.Info" 
+                                      Size="Size.Small"
+                                      StartIcon="@Icons.Material.Filled.LocalShipping"
+                                      OnClick="@(() => SiparisDurumunuGuncelle(context.Id, "Teslim Edildi"))">
+                                Teslim Et
+                            </MudButton>
+                        }
+                    </MudStack>
+                </MudTd>
+            </RowTemplate>
+        </MudTable>
+        </MudPaper>
+    }
+</MudContainer>
+
+@code {
+    private List<SiparisDto>? siparisler;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await SiparisleriYukle();
+    }
+
+    private async Task SiparisleriYukle()
+    {
+        try
+        {
+            var response = await HttpClient.GetAsync("api/siparisler");
+            if (response.IsSuccessStatusCode)
+            {
+                var jsonContent = await response.Content.ReadAsStringAsync();
+                var siparislerData = System.Text.Json.JsonSerializer.Deserialize<List<SiparisApiDto>>(jsonContent);
+                
+                siparisler = siparislerData?.Select(s => new SiparisDto
+                {
+                    Id = s.id,
+                    MusteriAdi = s.kullaniciEmail,
+                    SiparisTarihi = s.siparisTarihi,
+                    ToplamTutar = s.toplamTutar,
+                    Durum = s.durum,
+                    Adres = s.adres,
+                    SiparisKalemleri = s.siparisKalemleri?.Select(sk => new SiparisKalemiDto
+                    {
+                        Id = sk.id,
+                        UrunId = sk.urunId,
+                        UrunAd = sk.urunAd,
+                        Adet = sk.adet,
+                        Fiyat = sk.fiyat
+                    }).ToList() ?? new List<SiparisKalemiDto>()
+                }).ToList() ?? new List<SiparisDto>();
+                
+                StateHasChanged();
+            }
+            else
+            {
+                Snackbar.Add("Siparişler yüklenirken bir hata oluştu!", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Siparişler yüklenirken bir hata oluştu!", Severity.Error);
+            Console.WriteLine($"Sipariş yükleme hatası: {ex.Message}");
+        }
+    }
+
+    private Color GetDurumRengi(string durum)
+    {
+        return durum switch
+        {
+            "Bekliyor" => Color.Warning,
+            "Hazırlanıyor" => Color.Info,
+            "Tamamlandı" => Color.Success,
+            "İptal" => Color.Error,
+            _ => Color.Default
+        };
+    }
+
+    private async Task SiparisDetayiniGoruntule(int siparisId)
+    {
+        Navigation.NavigateTo($"/admin/siparis-detay/{siparisId}");
+    }
+
+    private async Task SiparisDurumunuGuncelle(int siparisId, string yeniDurum)
+    {
+        try
+        {
+            var durumDto = new { YeniDurum = yeniDurum };
+            var json = System.Text.Json.JsonSerializer.Serialize(durumDto);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            
+            var response = await HttpClient.PutAsync($"api/siparisler/{siparisId}/durum", content);
+            if (response.IsSuccessStatusCode)
+            {
+                Snackbar.Add("Sipariş durumu güncellendi!", Severity.Success);
+                await SiparisleriYukle();
+            }
+            else
+            {
+                Snackbar.Add("Sipariş durumu güncellenirken hata oluştu!", Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Snackbar.Add("Sipariş durumu güncellenirken hata oluştu!", Severity.Error);
+            Console.WriteLine($"Sipariş durum güncelleme hatası: {ex.Message}");
+        }
+    }
+
+    public class SiparisDto
+    {
+        public int Id { get; set; }
+        public string MusteriAdi { get; set; } = string.Empty;
+        public DateTime SiparisTarihi { get; set; }
+        public decimal ToplamTutar { get; set; }
+        public string Durum { get; set; } = string.Empty;
+        public string Adres { get; set; } = string.Empty;
+        public List<SiparisKalemiDto> SiparisKalemleri { get; set; } = new List<SiparisKalemiDto>();
+    }
+
+    public class SiparisKalemiDto
+    {
+        public int Id { get; set; }
+        public int UrunId { get; set; }
+        public string UrunAd { get; set; } = string.Empty;
+        public int Adet { get; set; }
+        public decimal Fiyat { get; set; }
+    }
+
+    public class SiparisApiDto
+    {
+        public int id { get; set; }
+        public string kullaniciEmail { get; set; } = string.Empty;
+        public DateTime siparisTarihi { get; set; }
+        public decimal toplamTutar { get; set; }
+        public string durum { get; set; } = string.Empty;
+        public string adres { get; set; } = string.Empty;
+        public List<SiparisKalemiApiDto>? siparisKalemleri { get; set; }
+    }
+
+    public class SiparisKalemiApiDto
+    {
+        public int id { get; set; }
+        public int urunId { get; set; }
+        public string urunAd { get; set; } = string.Empty;
+        public int adet { get; set; }
+        public decimal fiyat { get; set; }
+    }
+}

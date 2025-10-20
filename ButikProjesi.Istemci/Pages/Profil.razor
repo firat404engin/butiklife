@@ -1,0 +1,479 @@
+@page "/profil"
+@attribute [Authorize]
+@using Microsoft.AspNetCore.Authorization
+@using Microsoft.AspNetCore.Components.Authorization
+@using ButikProjesi.Istemci.Servisler
+@using ButikProjesi.Istemci.Shared
+@using MudBlazor
+@inject SiparisServisi SiparisServisi
+@inject YorumServisi YorumServisi
+@inject AuthServisi AuthServisi
+@inject ISnackbar Snackbar
+@inject AuthenticationStateProvider AuthStateProvider
+
+<PageTitle>Profilim - BUTIK</PageTitle>
+
+<MudContainer MaxWidth="MaxWidth.Large" Class="mt-8 mb-8">
+    <MudText Typo="Typo.h4" Class="mb-6" Style="font-family: 'Inter', sans-serif; font-weight: 700; color: #2c3e50;">
+        Profilim
+    </MudText>
+
+    <MudTabs Elevation="2" Rounded="true" ApplyEffectsToContainer="true" PanelClass="pa-6">
+        <!-- Profil Bilgileri Sekmesi -->
+        <MudTabPanel Text="Profil Bilgileri" Icon="@Icons.Material.Filled.Person" @onclick="@ProfilBilgileriniYukle">
+            <MudCard Elevation="0">
+                <MudCardContent>
+                    @if (profilYukleniyor)
+                    {
+                        <MudProgressCircular Indeterminate="true" Color="Color.Primary" />
+                        <MudText Class="mt-2">Profil bilgileri yükleniyor...</MudText>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.h6" Class="mb-4" Style="color: #2c3e50; font-weight: 600;">
+                            Profil Bilgileri
+                        </MudText>
+                        
+                        <MudForm @ref="profilForm">
+                            <MudGrid Spacing="3">
+                                <MudItem xs="12">
+                                    <MudTextField @bind-Value="profilEmail" 
+                                                Label="Email Adresi" 
+                                                Variant="Variant.Outlined" 
+                                                ReadOnly="true"
+                                                Disabled="true"
+                                                HelperText="Email adresi değiştirilemez" />
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudTextField @bind-Value="profilAdSoyad" 
+                                                Label="Ad Soyad" 
+                                                Variant="Variant.Outlined"
+                                                Placeholder="Adınız ve soyadınız" />
+                                </MudItem>
+                                <MudItem xs="12" md="6">
+                                    <MudTextField @bind-Value="profilTelefon" 
+                                                Label="Telefon Numarası" 
+                                                Variant="Variant.Outlined"
+                                                Placeholder="0555 123 45 67" />
+                                </MudItem>
+                                <MudItem xs="12">
+                                    <MudTextField @bind-Value="profilAdres" 
+                                                Label="Adres" 
+                                                Variant="Variant.Outlined"
+                                                Lines="3"
+                                                Placeholder="Teslimat adresiniz" />
+                                </MudItem>
+                            </MudGrid>
+
+                            <MudDivider Class="my-6" />
+
+                            <MudButton Variant="Variant.Filled" 
+                                      Color="Color.Primary" 
+                                      Size="Size.Large"
+                                      StartIcon="@Icons.Material.Filled.Save"
+                                      OnClick="@ProfilGuncelle"
+                                      Disabled="@profilGuncelleniyor"
+                                      FullWidth="true">
+                                @(profilGuncelleniyor ? "Güncelleniyor..." : "Bilgileri Güncelle")
+                            </MudButton>
+                        </MudForm>
+                    }
+                </MudCardContent>
+            </MudCard>
+        </MudTabPanel>
+
+        <!-- Sipariş Geçmişim Sekmesi -->
+        <MudTabPanel Text="Sipariş Geçmişim" Icon="@Icons.Material.Filled.ShoppingBag" @onclick="@SiparisleriYukle">
+            @if (siparisler == null)
+            {
+                <div class="d-flex justify-center align-center" style="min-height: 300px;">
+                    <div class="text-center">
+                        <MudProgressCircular Indeterminate="true" Color="Color.Primary" Size="Size.Large" />
+                        <MudText Class="mt-4" Typo="Typo.body1">Siparişler yükleniyor...</MudText>
+                    </div>
+                </div>
+            }
+            else if (!siparisler.Any())
+            {
+                <MudPaper Elevation="0" Class="pa-8 text-center">
+                    <MudIcon Icon="@Icons.Material.Filled.ShoppingCart" Size="Size.Large" Style="font-size: 80px; color: #bdc3c7;" />
+                    <MudText Typo="Typo.h6" Class="mt-4 mb-2" Style="color: #7f8c8d;">
+                        Henüz sipariş vermediniz
+                    </MudText>
+                    <MudText Typo="Typo.body2" Style="color: #95a5a6;">
+                        Alışverişe başlamak için ürünlerimize göz atın!
+                    </MudText>
+                    <MudButton Href="/urunler" 
+                              Variant="Variant.Filled" 
+                              Color="Color.Primary" 
+                              Class="mt-4"
+                              StartIcon="@Icons.Material.Filled.ShoppingBag">
+                        Alışverişe Başla
+                    </MudButton>
+                </MudPaper>
+            }
+            else
+            {
+                <MudCard Elevation="0">
+                    <MudCardContent>
+                        <MudTable Items="@siparisler" 
+                                 Hover="true" 
+                                 Dense="true"
+                                 Elevation="0"
+                                 Style="font-family: 'Roboto', sans-serif;">
+                            <HeaderContent>
+                                <MudTh Style="font-weight: 600; color: #34495e;">Sipariş No</MudTh>
+                                <MudTh Style="font-weight: 600; color: #34495e;">Tarih</MudTh>
+                                <MudTh Style="font-weight: 600; color: #34495e;">Ürün Sayısı</MudTh>
+                                <MudTh Style="font-weight: 600; color: #34495e;">Toplam Tutar</MudTh>
+                                <MudTh Style="font-weight: 600; color: #34495e;">Durum</MudTh>
+                            </HeaderContent>
+                            <RowTemplate>
+                                <MudTd DataLabel="Sipariş No">
+                                    <MudText Typo="Typo.body2" Style="font-weight: 600; color: #3498db;">
+                                        #@context.GetProperty("id").GetInt32()
+                                    </MudText>
+                                </MudTd>
+                                <MudTd DataLabel="Tarih">
+                                    <MudText Typo="Typo.body2" Style="color: #7f8c8d;">
+                                        @context.GetProperty("siparisTarihi").GetDateTime().ToString("dd.MM.yyyy")
+                                    </MudText>
+                                </MudTd>
+                                <MudTd DataLabel="Ürün Sayısı">
+                                    <MudChip T="string" Size="Size.Small" Color="Color.Default" Variant="Variant.Outlined">
+                                        @context.GetProperty("urunSayisi").GetInt32() ürün
+                                    </MudChip>
+                                </MudTd>
+                                <MudTd DataLabel="Toplam Tutar">
+                                    <MudText Typo="Typo.body1" Style="font-weight: 600; color: #27ae60;">
+                                        @context.GetProperty("toplamTutar").GetDecimal().ToString("C", new System.Globalization.CultureInfo("tr-TR"))
+                                    </MudText>
+                                </MudTd>
+                                <MudTd DataLabel="Durum">
+                                    @{
+                                        var durum = context.GetProperty("durum").GetString();
+                                        var durumRenk = durum switch
+                                        {
+                                            "Tamamlandı" => Color.Success,
+                                            "Hazırlanıyor" => Color.Info,
+                                            "Kargoda" => Color.Warning,
+                                            "Teslim Edildi" => Color.Success,
+                                            "İptal Edildi" => Color.Error,
+                                            _ => Color.Default
+                                        };
+                                    }
+                                    <MudChip T="string"
+                                            Color="@durumRenk" 
+                                            Size="Size.Small"
+                                            Style="font-weight: 500;">
+                                        @durum
+                                    </MudChip>
+                                </MudTd>
+                            </RowTemplate>
+                            <ChildRowContent>
+                                @{
+                                    var siparisDurum = context.GetProperty("durum").GetString();
+                                    var siparisKalemleri = context.GetProperty("siparisKalemleri").EnumerateArray();
+                                }
+                                <td colspan="5" style="padding: 0;">
+                                    <MudPaper Elevation="0" Class="pa-4" Style="background-color: #f8f9fa;">
+                                        <MudText Typo="Typo.subtitle1" Style="font-weight: 600; color: #2c3e50; margin-bottom: 16px;">
+                                            <MudIcon Icon="@Icons.Material.Filled.Inventory" Class="mr-2" />
+                                            Sipariş İçeriği
+                                        </MudText>
+                                        <MudGrid Spacing="2">
+                                            @foreach (var kalem in siparisKalemleri)
+                                            {
+                                                <MudItem xs="12">
+                                                    <MudPaper Elevation="1" Class="pa-3 rounded-lg" Style="background: white;">
+                                                        <div class="d-flex align-center justify-space-between">
+                                                            <div class="d-flex align-center" style="gap: 16px; flex: 1;">
+                                                                @{
+                                                                    var imgUrl = kalem.GetProperty("urunGorselUrl").GetString();
+                                                                }
+                                                                @if (!string.IsNullOrWhiteSpace(imgUrl))
+                                                                {
+                                                                    <img src="@imgUrl" alt="@kalem.GetProperty("urunAd").GetString()" style="width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #e0e0e0;" />
+                                                                }
+                                                                else
+                                                                {
+                                                                    <div style="width: 60px; height: 60px; background: #f5f5f5; border: 1px solid #e0e0e0; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+                                                                        <MudIcon Icon="@Icons.Material.Outlined.Image" Style="color: #bbb;" />
+                                                                    </div>
+                                                                }
+                                                                <div style="flex: 1;">
+                                                                    <MudText Typo="Typo.body1" Style="font-weight: 600; color: #2c3e50;">
+                                                                        @kalem.GetProperty("urunAd").GetString()
+                                                                    </MudText>
+                                                                    <MudText Typo="Typo.body2" Style="color: #7f8c8d;">
+                                                                        @kalem.GetProperty("adet").GetInt32() adet × @kalem.GetProperty("fiyat").GetDecimal().ToString("C", new System.Globalization.CultureInfo("tr-TR"))
+                                                                    </MudText>
+                                                                </div>
+                                                                <MudText Typo="Typo.body1" Style="font-weight: 600; color: #27ae60;">
+                                                                    @((kalem.GetProperty("adet").GetInt32() * kalem.GetProperty("fiyat").GetDecimal()).ToString("C", new System.Globalization.CultureInfo("tr-TR")))
+                                                                </MudText>
+                                                  @if (siparisDurum == "Teslim Edildi")
+                                                  {
+                                                      var urunId = kalem.GetProperty("urunId").GetInt32();
+                                                      var urunAd = kalem.GetProperty("urunAd").GetString() ?? "";
+                                                      
+                                                      <MudButton Variant="Variant.Outlined" 
+                                                                Color="Color.Primary" 
+                                                                Size="Size.Small"
+                                                                StartIcon="@Icons.Material.Filled.RateReview"
+                                                                OnClick="@(() => YorumFormAc(urunId, urunAd))">
+                                                         Değerlendir.
+                                                      </MudButton>
+                                                  }
+                                                            </div>
+                                                        </div>
+                                                    </MudPaper>
+                                                </MudItem>
+                                            }
+                                        </MudGrid>
+                                        <MudDivider Class="my-3" />
+                                        <div class="d-flex justify-space-between align-center">
+                                            <MudText Typo="Typo.subtitle1" Style="font-weight: 600; color: #2c3e50;">
+                                                Adres: @context.GetProperty("adres").GetString()
+                                            </MudText>
+                                            @if (context.GetProperty("durum").GetString() == "Teslim Edildi" && 
+                                                 context.TryGetProperty("teslimTarihi", out var teslimTarihi) && 
+                                                 teslimTarihi.ValueKind != System.Text.Json.JsonValueKind.Null)
+                                            {
+                                                <MudText Typo="Typo.body2" Style="color: #27ae60; font-weight: 600;">
+                                                    <MudIcon Icon="@Icons.Material.Filled.LocalShipping" Size="Size.Small" Class="mr-1" />
+                                                    Teslim Tarihi: @teslimTarihi.GetDateTime().ToString("dd.MM.yyyy HH:mm")
+                                                </MudText>
+                                            }
+                                        </div>
+                                    </MudPaper>
+                                </td>
+                            </ChildRowContent>
+                            <PagerContent>
+                                <MudTablePager PageSizeOptions="new int[] { 5, 10, 25 }" 
+                                              InfoFormat="@("{first_item}-{last_item} / {all_items} sipariş")" />
+                            </PagerContent>
+                        </MudTable>
+                    </MudCardContent>
+                </MudCard>
+            }
+        </MudTabPanel>
+    </MudTabs>
+</MudContainer>
+
+<!-- Inline Yorum Formu -->
+@if (yorumFormAcik)
+{
+    <MudOverlay Visible="true" ZIndex="9999" OnClick="@YorumFormKapat" />
+    <MudPaper Style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 10000; min-width: 500px; max-width: 600px; padding: 24px;">
+        <MudText Typo="Typo.h6" Class="mb-4">@secilenUrunAd için Yorum Yap</MudText>
+        
+        <MudStack Spacing="3">
+            <div>
+                <MudText Typo="Typo.subtitle2" Class="mb-2" Style="font-weight: 600;">Puanınız</MudText>
+                <MudRating @bind-SelectedValue="yorumPuan" Size="Size.Large" Color="Color.Warning" MaxValue="5" />
+            </div>
+            
+            <MudTextField @bind-Value="yorumMetin" 
+                         Label="Yorumunuz" 
+                         Variant="Variant.Outlined" 
+                         Lines="5" 
+                         Counter="1000"
+                         MaxLength="1000"
+                         HelperText="En az 10 karakter girmelisiniz" />
+            
+            <MudCheckBox @bind-Value="yorumIsimGosterilsin" 
+                        Label="Adım ve soyadım yorumda gözüksün" 
+                        Color="Color.Primary" />
+            
+            @if (!yorumIsimGosterilsin)
+            {
+                <MudAlert Severity="Severity.Info" Variant="Variant.Outlined" Dense="true">
+                    Yorumunuz baş harflerinizle gösterilecektir (örn: F. E.)
+                </MudAlert>
+            }
+        </MudStack>
+
+        <div class="d-flex justify-end gap-2 mt-4">
+            <MudButton OnClick="YorumFormKapat">Vazgeç</MudButton>
+            <MudButton Variant="Variant.Filled" 
+                      Color="Color.Primary" 
+                      OnClick="YorumGonder"
+                      Disabled="@(!YorumFormValid)">
+                Yorumu Gönder
+            </MudButton>
+        </div>
+    </MudPaper>
+}
+
+@code {
+    private List<System.Text.Json.JsonElement>? siparisler;
+
+    // Profil için değişkenler
+    private MudForm? profilForm;
+    private bool profilYukleniyor = false;
+    private bool profilGuncelleniyor = false;
+    private string? profilEmail = string.Empty;
+    private string? profilAdSoyad = string.Empty;
+    private string? profilAdres = string.Empty;
+    private string? profilTelefon = string.Empty;
+
+    // Yorum formu için değişkenler
+    private bool yorumFormAcik = false;
+    private int secilenUrunId = 0;
+    private string secilenUrunAd = string.Empty;
+    private int yorumPuan = 5;
+    private string yorumMetin = string.Empty;
+    private bool yorumIsimGosterilsin = true;
+
+    private bool YorumFormValid => yorumPuan >= 1 && yorumPuan <= 5 
+                                && !string.IsNullOrWhiteSpace(yorumMetin) 
+                                && yorumMetin.Length >= 10;
+
+    protected override async Task OnInitializedAsync()
+    {
+        // Profil bilgilerini yükle
+        await ProfilBilgileriniYukle();
+    }
+
+    private async Task ProfilBilgileriniYukle()
+    {
+        profilYukleniyor = true;
+        try
+        {
+            var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+            profilEmail = authState.User.Identity?.Name;
+
+            var profilBilgileri = await AuthServisi.GetProfilAsync();
+            
+            if (profilBilgileri != null && profilBilgileri.Value.ValueKind != System.Text.Json.JsonValueKind.Null)
+            {
+                if (profilBilgileri.Value.TryGetProperty("adSoyad", out var adSoyad))
+                    profilAdSoyad = adSoyad.GetString();
+                
+                if (profilBilgileri.Value.TryGetProperty("adres", out var adres))
+                    profilAdres = adres.GetString();
+                
+                if (profilBilgileri.Value.TryGetProperty("telefonNumarasi", out var telefon))
+                    profilTelefon = telefon.GetString();
+
+                Console.WriteLine($"Profil yüklendi: {profilAdSoyad}, {profilAdres}, {profilTelefon}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Profil yüklenirken hata: {ex.Message}");
+            Snackbar.Add("Profil bilgileri yüklenirken bir hata oluştu!", Severity.Error);
+        }
+        finally
+        {
+            profilYukleniyor = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task ProfilGuncelle()
+    {
+        profilGuncelleniyor = true;
+        StateHasChanged();
+
+        try
+        {
+            var (basarili, mesaj) = await AuthServisi.UpdateProfilAsync(profilAdSoyad, profilAdres, profilTelefon);
+            
+            if (basarili)
+            {
+                Snackbar.Add(mesaj, Severity.Success);
+            }
+            else
+            {
+                Snackbar.Add(mesaj, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Profil güncellenirken hata: {ex.Message}");
+            Snackbar.Add("Profil güncellenirken bir hata oluştu!", Severity.Error);
+        }
+        finally
+        {
+            profilGuncelleniyor = false;
+            StateHasChanged();
+        }
+    }
+
+    private async Task SiparisleriYukle()
+    {
+        if (siparisler != null) return; // Zaten yüklendiyse tekrar yükleme
+        
+        try
+        {
+            siparisler = await SiparisServisi.SiparisGecmisimiGetirAsync();
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Sipariş geçmişi yüklenirken hata: {ex.Message}");
+            Snackbar.Add("Sipariş geçmişiniz yüklenirken bir hata oluştu!", Severity.Error);
+        }
+    }
+
+    private void YorumFormAc(int urunId, string urunAd)
+    {
+        Console.WriteLine($"🎯 Yorum formu açılıyor - UrunId: {urunId}, UrunAd: {urunAd}");
+        secilenUrunId = urunId;
+        secilenUrunAd = urunAd;
+        yorumPuan = 5;
+        yorumMetin = string.Empty;
+        yorumIsimGosterilsin = true;
+        yorumFormAcik = true;
+    }
+
+    private void YorumFormKapat()
+    {
+        Console.WriteLine("🚪 Yorum formu kapatılıyor");
+        yorumFormAcik = false;
+    }
+
+    private async Task YorumGonder()
+    {
+        Console.WriteLine($"📤 Yorum gönderiliyor - UrunId: {secilenUrunId}, Puan: {yorumPuan}");
+        
+        if (!YorumFormValid)
+        {
+            Console.WriteLine("❌ Form geçersiz!");
+            Snackbar.Add("Lütfen en az 10 karakter yorum yazın!", Severity.Warning);
+            return;
+        }
+        
+        try
+        {
+            var (basarili, mesaj) = await YorumServisi.YorumEkleAsync(
+                secilenUrunId, 
+                yorumMetin, 
+                yorumPuan, 
+                yorumIsimGosterilsin
+            );
+            
+            yorumFormAcik = false;
+            
+            if (basarili)
+            {
+                Console.WriteLine("✅ Yorum başarıyla eklendi!");
+                Snackbar.Add("Yorumunuz gönderildi! Admin onayından sonra yayınlanacaktır. 🎉", Severity.Success);
+            }
+            else
+            {
+                Console.WriteLine($"❌ Hata: {mesaj}");
+                Snackbar.Add(mesaj, Severity.Error);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"💥 Exception: {ex.Message}");
+            yorumFormAcik = false;
+            Snackbar.Add("Yorum gönderilirken bir hata oluştu!", Severity.Error);
+        }
+    }
+}
+
